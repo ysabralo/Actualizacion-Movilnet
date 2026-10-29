@@ -242,7 +242,7 @@ const App = () => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-6 text-center">
             <h1 className="text-2xl font-bold">Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
+            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión de Talento Humano - Actualización de Datos</h2>
           </div>
           <form onSubmit={handleLogin} className="p-8">
             <div className="mb-6">
