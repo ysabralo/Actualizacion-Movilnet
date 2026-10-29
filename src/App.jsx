@@ -13,6 +13,7 @@ const App = () => {
   const [validationErrors, setValidationErrors] = useState([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false); // Estado para el borrador
   const [submitStatus, setSubmitStatus] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -72,8 +73,6 @@ const App = () => {
   const handleInputChange = (section, field, value) => {
     setFormData(prev => {
       const newData = { ...prev, [section]: { ...prev[section], [field]: value } };
-      
-      // Cálculo automático de edad para el trabajador
       if (section === 'datosPersonales' && field === 'fechaNacimiento') {
         newData.datosPersonales.edad = calcularEdad(value);
       }
@@ -86,12 +85,9 @@ const App = () => {
     setFormData(prev => {
       const newArray = [...prev[section][arrayName]];
       newArray[index] = { ...newArray[index], [field]: value };
-      
-      // Cálculo automático de edad para familiares dependientes
       if (section === 'actividadesFamilia' && arrayName === 'dependientes' && field === 'fechaNacimiento') {
         newArray[index].edad = calcularEdad(value);
       }
-      
       return { ...prev, [section]: { ...prev[section], [arrayName]: newArray } };
     });
   };
@@ -109,13 +105,14 @@ const App = () => {
   };
 
   // ================= LÓGICA DE VALIDACIÓN SECUENCIAL =================
-  const validateTab = (tabIndex) => {
+  // Se le agregó 'data' como parámetro para poder evaluar borradores recuperados
+  const validateTab = (tabIndex, data = formData) => {
     const errors = [];
-    const dp = formData.datosPersonales;
-    const dir = formData.direccion;
-    const ed = formData.educacion;
-    const fs = formData.actividadesFamilia;
-    const exp = formData.experiencia;
+    const dp = data.datosPersonales;
+    const dir = data.direccion;
+    const ed = data.educacion;
+    const fs = data.actividadesFamilia;
+    const exp = data.experiencia;
 
     if (tabIndex === 0) {
       if (!dp.rif) errors.push("RIF");
@@ -153,7 +150,6 @@ const App = () => {
       setValidationErrors(errors);
       return;
     }
-    
     setValidationErrors([]);
     const nextTab = activeTab + 1;
     setActiveTab(nextTab);
@@ -167,7 +163,7 @@ const App = () => {
     window.scrollTo(0, 0);
   };
 
-  // ================= LOGIN & SUBMIT =================
+  // ================= LOGIN, BORRADOR & SUBMIT =================
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError(null);
@@ -179,7 +175,19 @@ const App = () => {
         
         if (data.datos_previos) {
           setFormData(data.datos_previos);
-          setMaxUnlockedTab(4);
+          
+          // Lógica Inteligente: Determina dónde se quedó el trabajador
+          let unlocked = 0;
+          for (let i = 0; i <= 4; i++) {
+            if (validateTab(i, data.datos_previos).length === 0) {
+              unlocked = i + 1; // Si pasó, desbloquea la siguiente
+            } else {
+              break; // Si falló, se detiene aquí
+            }
+          }
+          if (unlocked > 4) unlocked = 4; // Límite en la pestaña 5
+          setMaxUnlockedTab(unlocked);
+          setActiveTab(unlocked); // Lo lleva directo a la que le falta
         } else {
           setFormData(prev => ({
             ...prev,
@@ -190,7 +198,8 @@ const App = () => {
               cedula: data.cedula
             }
           }));
-          setMaxUnlockedTab(0); 
+          setMaxUnlockedTab(0);
+          setActiveTab(0);
         }
         setIsAuthenticated(true);
       } else {
@@ -200,6 +209,29 @@ const App = () => {
       setLoginError('Error de conexión con la base de datos.');
     } finally {
       setIsSearching(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true);
+    setSubmitStatus(null);
+    setValidationErrors([]);
+    try {
+      const response = await fetch('/api/oferta-servicio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      if (response.ok) {
+        setSubmitStatus('draft'); // Etiqueta especial de borrador
+        window.scrollTo(0, 0);
+      } else {
+        setSubmitStatus('error');
+      }
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -241,8 +273,8 @@ const App = () => {
       <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-6 text-center">
-            <h1 className="text-2xl font-bold">Telecomunicaciones Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión de Talento Humano - Actualización de Datos</h2>
+            <h1 className="text-2xl font-bold">Movilnet C.A.</h1>
+            <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
           </div>
           <form onSubmit={handleLogin} className="p-8">
             <div className="mb-6">
@@ -269,7 +301,7 @@ const App = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Telecomunicaciones Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión de Talento Humano - Actualización de Datos</h2>
+            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión Humana - Actualización de Oferta de Servicio</h2>
           </div>
           <div className="bg-blue-800 p-3 rounded-lg border border-blue-700 min-w-[250px] relative">
              <button onClick={() => {setIsAuthenticated(false); setSubmitStatus(null); setP00Input(''); setMaxUnlockedTab(0); setActiveTab(0);}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
@@ -280,10 +312,20 @@ const App = () => {
       </header>
 
       <main className="max-w-6xl mx-auto mt-6 px-4">
+        
+        {/* BANNER DE ÉXITO FINAL */}
         {submitStatus === 'success' && (
           <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded flex items-start shadow-sm">
             <CheckCircle className="text-green-500 mr-3 mt-0.5" />
-            <div><h3 className="text-green-800 font-bold">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-sm mt-1">La información ha sido registrada. Puede salir o seguir editando.</p></div>
+            <div><h3 className="text-green-800 font-bold">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-sm mt-1">La información ha sido completada y registrada de forma definitiva.</p></div>
+          </div>
+        )}
+
+        {/* BANNER DE BORRADOR */}
+        {submitStatus === 'draft' && (
+          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-start shadow-sm">
+            <Save className="text-blue-500 mr-3 mt-0.5" />
+            <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su P00, continuará exactamente donde lo dejó.</p></div>
           </div>
         )}
 
@@ -567,20 +609,31 @@ const App = () => {
                 </div>
               )}
 
-              <div className="flex justify-between items-center w-full">
-                <button type="button" onClick={handlePrev} disabled={activeTab === 0} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded disabled:opacity-30 flex items-center transition-colors">
-                  <ChevronLeft size={18} className="mr-1" /> Anterior
-                </button>
+              <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
+                
+                {/* BOTONES IZQUIERDA: ANTERIOR Y BORRADOR */}
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button type="button" onClick={handlePrev} disabled={activeTab === 0} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded disabled:opacity-30 flex items-center transition-colors">
+                    <ChevronLeft size={18} className="mr-1" /> Anterior
+                  </button>
+                  
+                  <button type="button" onClick={handleSaveDraft} disabled={isSavingDraft || isSubmitting} className="px-4 py-2 text-blue-700 bg-blue-100 hover:bg-blue-200 font-medium rounded flex items-center transition-colors disabled:opacity-50">
+                    {isSavingDraft ? 'Guardando...' : <><Save size={18} className="mr-1" /> Guardar Borrador</>}
+                  </button>
+                </div>
 
-                {activeTab < tabs.length - 1 ? (
-                  <button type="button" onClick={handleNext} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center transition-colors">
-                    Siguiente <ChevronRight size={18} className="ml-1" />
-                  </button>
-                ) : (
-                  <button type="submit" disabled={isSubmitting} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center disabled:opacity-50">
-                    {isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}
-                  </button>
-                )}
+                {/* BOTÓN DERECHA: SIGUIENTE O FINALIZAR */}
+                <div className="w-full sm:w-auto">
+                  {activeTab < tabs.length - 1 ? (
+                    <button type="button" onClick={handleNext} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center justify-center transition-colors">
+                      Siguiente <ChevronRight size={18} className="ml-1" />
+                    </button>
+                  ) : (
+                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">
+                      {isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
