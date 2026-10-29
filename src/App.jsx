@@ -241,8 +241,8 @@ const App = () => {
       <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-6 text-center">
-            <h1 className="text-2xl font-bold">Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
+            <h1 className="text-2xl font-bold">Telecomunicaciones Movilnet C.A.</h1>
+            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión de Talento Humano - Actualización de Datos</h2>
           </div>
           <form onSubmit={handleLogin} className="p-8">
             <div className="mb-6">
@@ -269,7 +269,7 @@ const App = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Telecomunicaciones Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión Humana - Actualización de Oferta de Servicio</h2>
+            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión de Talento Humano - Actualización de Datos</h2>
           </div>
           <div className="bg-blue-800 p-3 rounded-lg border border-blue-700 min-w-[250px] relative">
              <button onClick={() => {setIsAuthenticated(false); setSubmitStatus(null); setP00Input(''); setMaxUnlockedTab(0); setActiveTab(0);}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
