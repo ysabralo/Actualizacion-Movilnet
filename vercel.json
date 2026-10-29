@@ -6,7 +6,9 @@
       "framework": "vite"
     },
     "api": {
-      "root": "api"
+      "root": "api",
+      "framework": "fastapi",
+      "entrypoint": "index.py"
     }
   },
   "rewrites": [
