@@ -30,11 +30,11 @@ const App = () => {
     },
     educacion: {
       niveles: [
-        { nivel: 'Primaria', desde: '', hasta: '', graduado: '', titulo: '' },
-        { nivel: 'Secundaria', desde: '', hasta: '', graduado: '', titulo: '' },
-        { nivel: 'Técnica', desde: '', hasta: '', graduado: '', titulo: '' },
-        { nivel: 'Universitaria', desde: '', hasta: '', graduado: '', titulo: '' },
-        { nivel: 'Post-Grado', desde: '', hasta: '', graduado: '', titulo: '' }
+        { nivel: 'Primaria', graduado: '', titulo: '' },
+        { nivel: 'Secundaria', graduado: '', titulo: '' },
+        { nivel: 'Técnica', graduado: '', titulo: '' },
+        { nivel: 'Universitaria', graduado: '', titulo: '' },
+        { nivel: 'Post-Grado', graduado: '', titulo: '' }
       ],
       estudiaActualmente: '', horario: '', institucion: '', carrera: '', nivelAlcanzado: '', traslado: ''
     },
@@ -197,7 +197,7 @@ const App = () => {
         setLoginError('El número de personal (P00) no se encuentra registrado en SAP.');
       }
     } catch (error) {
-      setLoginError('Error de conexión con FastAPI.');
+      setLoginError('Error de conexión con la base de datos.');
     } finally {
       setIsSearching(false);
     }
@@ -410,16 +410,16 @@ const App = () => {
               <div className="overflow-x-auto mb-8 border rounded-lg">
                 <table className="w-full text-sm text-left bg-white">
                   <thead className="text-xs text-gray-700 bg-gray-100 border-b">
-                    <tr><th className="p-3 w-1/5">Nivel</th><th className="p-3 w-1/4">Desde - Hasta (Año)</th><th className="p-3 w-1/6">Graduado</th><th className="p-3">Título Obtenido</th></tr>
+                    <tr>
+                      <th className="p-3 w-1/4">Nivel</th>
+                      <th className="p-3 w-1/4">Graduado</th>
+                      <th className="p-3">Título Obtenido</th>
+                    </tr>
                   </thead>
                   <tbody>
                     {formData.educacion.niveles.map((nivel, idx) => (
                       <tr key={idx} className="border-b hover:bg-gray-50">
                         <td className="p-3 font-semibold text-gray-700">{nivel.nivel}</td>
-                        <td className="p-3 flex gap-2">
-                          <input type="text" placeholder="Desde" className="w-full p-2 border rounded text-xs" value={nivel.desde} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'desde', e.target.value)} />
-                          <input type="text" placeholder="Hasta" className="w-full p-2 border rounded text-xs" value={nivel.hasta} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'hasta', e.target.value)} />
-                        </td>
                         <td className="p-3"><select className="w-full p-2 border rounded bg-white text-xs" value={nivel.graduado} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}><option value="">Sel...</option><option>Sí</option><option>No</option></select></td>
                         <td className="p-3"><input type="text" className="w-full p-2 border rounded text-xs" value={nivel.titulo} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'titulo', e.target.value)} /></td>
                       </tr>
