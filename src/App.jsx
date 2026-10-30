@@ -34,11 +34,11 @@ const App = () => {
     },
     educacion: {
       niveles: [
-        { nivel: 'Primaria', graduado: '', titulo: '' },
-        { nivel: 'Secundaria', graduado: '', titulo: '' },
-        { nivel: 'Técnica', graduado: '', titulo: '' },
-        { nivel: 'Universitaria', graduado: '', titulo: '' },
-        { nivel: 'Post-Grado', graduado: '', titulo: '' }
+        { nivel: 'PRIMARIA', graduado: '', titulo: '' },
+        { nivel: 'SECUNDARIA', graduado: '', titulo: '' },
+        { nivel: 'TÉCNICA', graduado: '', titulo: '' },
+        { nivel: 'UNIVERSITARIA', graduado: '', titulo: '' },
+        { nivel: 'POST-GRADO', graduado: '', titulo: '' }
       ],
       estudiaActualmente: '', horario: '', institucion: '', carrera: '', nivelAlcanzado: '', traslado: ''
     },
@@ -60,6 +60,25 @@ const App = () => {
   const tabs = ["1. Datos Personales", "2. Dirección", "3. Educación e Idiomas", "4. Familia y Salud", "5. Experiencia"];
 
   // ================= FUNCIONES =================
+  
+  // Convertidor recursivo para estandarizar borradores viejos a MAYÚSCULAS
+  const convertDataToUppercase = (data) => {
+    if (typeof data !== 'object' || data === null) return data;
+    if (Array.isArray(data)) return data.map(convertDataToUppercase);
+    
+    const newData = {};
+    for (const key in data) {
+      if (key === 'correo' && typeof data[key] === 'string') {
+        newData[key] = data[key].toLowerCase(); // El correo siempre en minúscula
+      } else if (typeof data[key] === 'string') {
+        newData[key] = data[key].toUpperCase();
+      } else {
+        newData[key] = convertDataToUppercase(data[key]);
+      }
+    }
+    return newData;
+  };
+
   const calcularEdad = (fechaNacimiento) => {
     if (!fechaNacimiento) return '';
     const hoy = new Date();
@@ -71,17 +90,21 @@ const App = () => {
   };
 
   const handleInputChange = (section, field, value) => {
+    let finalValue = value;
+    if (typeof value === 'string') {
+      finalValue = field === 'correo' ? value.toLowerCase() : value.toUpperCase();
+    }
+
     setFormData(prev => {
-      const newData = { ...prev, [section]: { ...prev[section], [field]: value } };
-      if (section === 'datosPersonales' && field === 'fechaNacimiento') newData.datosPersonales.edad = calcularEdad(value);
+      const newData = { ...prev, [section]: { ...prev[section], [field]: finalValue } };
+      if (section === 'datosPersonales' && field === 'fechaNacimiento') newData.datosPersonales.edad = calcularEdad(finalValue);
       return newData;
     });
     setValidationErrors([]); 
   };
 
-  // Función para auto-formatear teléfonos (0414-1234567)
   const handlePhoneChange = (section, field, value) => {
-    const cleaned = value.replace(/\D/g, ''); // Deja solo números
+    const cleaned = value.replace(/\D/g, ''); 
     let formatted = cleaned;
     if (cleaned.length > 4) {
       formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 11)}`;
@@ -90,11 +113,16 @@ const App = () => {
   };
 
   const handleArrayChange = (section, arrayName, index, field, value) => {
+    let finalValue = value;
+    if (typeof value === 'string') {
+      finalValue = value.toUpperCase();
+    }
+
     setFormData(prev => {
       const newArray = [...prev[section][arrayName]];
-      newArray[index] = { ...newArray[index], [field]: value };
+      newArray[index] = { ...newArray[index], [field]: finalValue };
       if (section === 'actividadesFamilia' && arrayName === 'dependientes' && field === 'fechaNacimiento') {
-        newArray[index].edad = calcularEdad(value);
+        newArray[index].edad = calcularEdad(finalValue);
       }
       return { ...prev, [section]: { ...prev[section], [arrayName]: newArray } };
     });
@@ -124,11 +152,9 @@ const App = () => {
       if (!dp.estadoCivil) errors.push("Estado Civil");
       if (!dp.correo) errors.push("Correo Electrónico");
       
-      // Validación estricta de formato telefónico
       if (!dp.tlfMovil || dp.tlfMovil.length < 12) errors.push("Teléfono Móvil (Formato 0XXX-XXXXXXX)");
       if (dp.tlfLocal && dp.tlfLocal.length > 0 && dp.tlfLocal.length < 12) errors.push("Teléfono Local (Formato incompleto)");
       
-      // Contactos de emergencia
       if (!dp.emergenciaNombre1) errors.push("Nombre Contacto Emergencia 1");
       if (!dp.emergenciaTelefono1 || dp.emergenciaTelefono1.length < 12) errors.push("Teléfono Emergencia 1 (Incompleto)");
       if (!dp.emergenciaNombre2) errors.push("Nombre Contacto Emergencia 2");
@@ -191,17 +217,28 @@ const App = () => {
         const data = await response.json();
         
         if (data.datos_previos) {
-          setFormData(data.datos_previos);
+          // Convertimos la data previa a mayúsculas por seguridad
+          const formattedData = convertDataToUppercase(data.datos_previos);
+          setFormData(formattedData);
+          
           let unlocked = 0;
           for (let i = 0; i <= 4; i++) {
-            if (validateTab(i, data.datos_previos).length === 0) unlocked = i + 1;
+            if (validateTab(i, formattedData).length === 0) unlocked = i + 1;
             else break;
           }
           if (unlocked > 4) unlocked = 4;
           setMaxUnlockedTab(unlocked);
           setActiveTab(unlocked);
         } else {
-          setFormData(prev => ({ ...prev, datosPersonales: { ...prev.datosPersonales, nombres: data.nombres, apellidos: data.apellidos, cedula: data.cedula } }));
+          setFormData(prev => ({ 
+            ...prev, 
+            datosPersonales: { 
+              ...prev.datosPersonales, 
+              nombres: data.nombres.toUpperCase(), 
+              apellidos: data.apellidos.toUpperCase(), 
+              cedula: data.cedula.toUpperCase() 
+            } 
+          }));
           setMaxUnlockedTab(0);
           setActiveTab(0);
         }
@@ -262,7 +299,7 @@ const App = () => {
               <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                <input type="text" placeholder="Igual que en la Cédula" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+                <input type="text" placeholder="Igual que en la C.I." className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
               </div>
             </div>
 
@@ -344,7 +381,7 @@ const App = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">RIF <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.rif} onChange={e => handleInputChange('datosPersonales', 'rif', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.nacionalidad} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">Seleccione</option><option>V</option><option>E</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.nacionalidad} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.gaceta} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
               </div>
 
@@ -352,78 +389,52 @@ const App = () => {
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.lugarNacimiento} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" className="w-full p-2 border rounded" value={formData.datosPersonales.fechaNacimiento} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalculado" className="w-full p-2 border rounded bg-gray-100 text-gray-600" value={formData.datosPersonales.edad} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.sexo} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">Sel</option><option>M</option><option>F</option></select></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalc." className="w-full p-2 border rounded bg-gray-100 text-gray-600" value={formData.datosPersonales.edad} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.sexo} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                {/* GRUPO SANGUÍNEO EN SELECT */}
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Grupo Sanguíneo</label>
                   <select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.grupoSanguineo} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
-                    <option value="">Seleccione</option>
-                    <option>O+</option><option>O-</option>
-                    <option>A+</option><option>A-</option>
-                    <option>B+</option><option>B-</option>
-                    <option>AB+</option><option>AB-</option>
+                    <option value="">SELECCIONE</option><option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
                   </select>
                 </div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.estadoCivil} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">Seleccione</option><option>Soltero</option><option>Casado</option><option>Viudo</option><option>Divorciado</option><option>Concubino</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.habilidadMotriz} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">Seleccione</option><option>Diestro</option><option>Zurdo</option><option>Ambidiestro</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.estadoCivil} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">SELECCIONE</option><option value="SOLTERO">SOLTERO</option><option value="CASADO">CASADO</option><option value="VIUDO">VIUDO</option><option value="DIVORCIADO">DIVORCIADO</option><option value="CONCUBINO">CONCUBINO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.habilidadMotriz} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">SELECCIONE</option><option value="DIESTRO">DIESTRO</option><option value="ZURDO">ZURDO</option><option value="AMBIDIESTRO">AMBIDIESTRO</option></select></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.licencia} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded" value={formData.datosPersonales.gradoLicencia} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.tipoVivienda} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">Seleccione</option><option>Casa</option><option>Apartamento</option><option>Quinta</option><option>Otro</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.condicionVivienda} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">Seleccione</option><option>Propia</option><option>Alquilada</option><option>Familiar</option><option>Otra</option></select></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.alergico} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">No / Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.alergiaDesc} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.tipoVivienda} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.condicionVivienda} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
+                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.alergico} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.alergiaDesc} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 border-t pt-4">
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.profesion} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">No / Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Nro de Colegio" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
+                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro de Colegio" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded" value={formData.datosPersonales.correo} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
-                
-                {/* TELÉFONOS CON FORMATO */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label>
-                  <input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfMovil} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label>
-                  <input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfLocal} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} />
-                </div>
+                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded lowercase" value={formData.datosPersonales.correo} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfMovil} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfLocal} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
               </div>
 
-              {/* CONTACTOS DE EMERGENCIA */}
               <div className="bg-red-50 p-4 rounded-lg border border-red-100 mt-6 mb-6">
                 <h4 className="text-sm font-bold text-red-800 mb-3 uppercase">En caso de emergencia comunicarse con</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label>
-                    <input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre1} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label>
-                    <input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono1} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label>
-                    <input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre2} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label>
-                    <input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono2} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} />
-                  </div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre1} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono1} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre2} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono2} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.carnetPatria} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">No / Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.nroCarnetPatria} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.carnetPatria} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.nroCarnetPatria} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-lg border mt-6">
@@ -431,9 +442,9 @@ const App = () => {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.estatura} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.peso} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaCamisa} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">Sel...</option><option>SS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaChemise} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">Sel...</option><option>SS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaFranela} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">Sel...</option><option>SS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaCamisa} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaChemise} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaFranela} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaBluejean} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaBota} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaZapato} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
@@ -477,7 +488,7 @@ const App = () => {
                     {formData.educacion.niveles.map((nivel, idx) => (
                       <tr key={idx} className="border-b hover:bg-gray-50">
                         <td className="p-3 font-semibold text-gray-700">{nivel.nivel}</td>
-                        <td className="p-3"><select className="w-full p-2 border rounded bg-white text-xs" value={nivel.graduado} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}><option value="">Sel...</option><option>Sí</option><option>No</option></select></td>
+                        <td className="p-3"><select className="w-full p-2 border rounded bg-white text-xs" value={nivel.graduado} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}><option value="">SEL...</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></td>
                         <td className="p-3"><input type="text" className="w-full p-2 border rounded text-xs" value={nivel.titulo} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'titulo', e.target.value)} /></td>
                       </tr>
                     ))}
@@ -485,7 +496,7 @@ const App = () => {
                 </table>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.educacion.estudiaActualmente} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">No / Sí</option><option>Sí</option><option>No</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.educacion.estudiaActualmente} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.horario} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.institucion} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.carrera} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
@@ -498,8 +509,8 @@ const App = () => {
                   {formData.programasIdiomas.idiomas.map((idioma, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                       <input type="text" placeholder={`${idx+1}) Indique Idioma`} className="w-1/2 p-2 border rounded text-xs" value={idioma.idioma} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'idioma', e.target.value)} />
-                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelHablado} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelHablado', e.target.value)}><option value="">Hablado</option><option>Básico</option><option>Medio</option><option>Avanzado</option></select>
-                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelEscrito} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelEscrito', e.target.value)}><option value="">Escrito</option><option>Básico</option><option>Medio</option><option>Avanzado</option></select>
+                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelHablado} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelHablado', e.target.value)}><option value="">HABLADO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
+                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelEscrito} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelEscrito', e.target.value)}><option value="">ESCRITO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
                     </div>
                   ))}
                 </div>
@@ -508,7 +519,7 @@ const App = () => {
                   {formData.programasIdiomas.programas.map((prog, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
                       <input type="text" placeholder={`${idx+1}) Señale el Programa`} className="w-2/3 p-2 border rounded text-xs" value={prog.programa} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'programa', e.target.value)} />
-                      <select className="w-1/3 p-2 border rounded bg-white text-xs" value={prog.nivelDominio} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'nivelDominio', e.target.value)}><option value="">Nivel</option><option>Básico</option><option>Medio</option><option>Avanzado</option></select>
+                      <select className="w-1/3 p-2 border rounded bg-white text-xs" value={prog.nivelDominio} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'nivelDominio', e.target.value)}><option value="">NIVEL</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
                     </div>
                   ))}
                 </div>
@@ -545,11 +556,11 @@ const App = () => {
               </div>
               <h3 className="text-sm font-bold text-gray-800 mb-3 border-b pb-1">Salud del Trabajador</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee discapacidad? <Req/> / Especifique</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.discapacidadPropia} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Especifique" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.discapacidadDesc} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} /></div></div>
+                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee discapacidad? <Req/> / Especifique</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.discapacidadPropia} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.discapacidadDesc} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} /></div></div>
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique el N° de Carnet CONAPDIS</label><input type="text" className="w-full p-2 border rounded" value={formData.actividadesFamilia.carnetConapdis} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} /></div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.tomaMedicamento} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.medicamentoCual} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
+                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.tomaMedicamento} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.medicamentoCual} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded" value={formData.actividadesFamilia.medicamentoMotivo} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
               </div>
             </div>
@@ -578,8 +589,8 @@ const App = () => {
                 </div>
               ))}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.esJubilado} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded" value={formData.experiencia.jubiladoDesc} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.enProcesoJubilacion} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded" value={formData.experiencia.procesoJubilacionDesc} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.esJubilado} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded" value={formData.experiencia.jubiladoDesc} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.enProcesoJubilacion} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded" value={formData.experiencia.procesoJubilacionDesc} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Empresa Privada</h3>
