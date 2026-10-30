@@ -24,6 +24,7 @@ const App = () => {
       nacionalidad: '', gaceta: '', edad: '', sexo: '', grupoSanguineo: '', estadoCivil: '', habilidadMotriz: '',
       licencia: '', gradoLicencia: '', tipoVivienda: '', condicionVivienda: '', alergico: '', alergiaDesc: '',
       profesion: '', colegiado: '', nroColegiado: '', correo: '', tlfMovil: '', tlfLocal: '',
+      emergenciaNombre1: '', emergenciaTelefono1: '', emergenciaNombre2: '', emergenciaTelefono2: '',
       carnetPatria: '', nroCarnetPatria: '', estatura: '', peso: '', tallaCamisa: '',
       tallaChemise: '', tallaFranela: '', tallaBluejean: '', tallaBota: '', tallaZapato: '', tallaCasco: ''
     },
@@ -78,6 +79,16 @@ const App = () => {
     setValidationErrors([]); 
   };
 
+  // Función para auto-formatear teléfonos (0414-1234567)
+  const handlePhoneChange = (section, field, value) => {
+    const cleaned = value.replace(/\D/g, ''); // Deja solo números
+    let formatted = cleaned;
+    if (cleaned.length > 4) {
+      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 11)}`;
+    }
+    handleInputChange(section, field, formatted);
+  };
+
   const handleArrayChange = (section, arrayName, index, field, value) => {
     setFormData(prev => {
       const newArray = [...prev[section][arrayName]];
@@ -112,7 +123,17 @@ const App = () => {
       if (!dp.sexo) errors.push("Sexo");
       if (!dp.estadoCivil) errors.push("Estado Civil");
       if (!dp.correo) errors.push("Correo Electrónico");
-      if (!dp.tlfMovil) errors.push("Teléfono Móvil");
+      
+      // Validación estricta de formato telefónico
+      if (!dp.tlfMovil || dp.tlfMovil.length < 12) errors.push("Teléfono Móvil (Formato 0XXX-XXXXXXX)");
+      if (dp.tlfLocal && dp.tlfLocal.length > 0 && dp.tlfLocal.length < 12) errors.push("Teléfono Local (Formato incompleto)");
+      
+      // Contactos de emergencia
+      if (!dp.emergenciaNombre1) errors.push("Nombre Contacto Emergencia 1");
+      if (!dp.emergenciaTelefono1 || dp.emergenciaTelefono1.length < 12) errors.push("Teléfono Emergencia 1 (Incompleto)");
+      if (!dp.emergenciaNombre2) errors.push("Nombre Contacto Emergencia 2");
+      if (!dp.emergenciaTelefono2 || dp.emergenciaTelefono2.length < 12) errors.push("Teléfono Emergencia 2 (Incompleto)");
+
       if (!dp.estatura) errors.push("Estatura");
       if (!dp.peso) errors.push("Peso");
     } else if (tabIndex === 1) {
@@ -337,7 +358,17 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Grupo Sanguíneo</label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.grupoSanguineo} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)} /></div>
+                {/* GRUPO SANGUÍNEO EN SELECT */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Grupo Sanguíneo</label>
+                  <select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.grupoSanguineo} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
+                    <option value="">Seleccione</option>
+                    <option>O+</option><option>O-</option>
+                    <option>A+</option><option>A-</option>
+                    <option>B+</option><option>B-</option>
+                    <option>AB+</option><option>AB-</option>
+                  </select>
+                </div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.estadoCivil} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">Seleccione</option><option>Soltero</option><option>Casado</option><option>Viudo</option><option>Divorciado</option><option>Concubino</option></select></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.habilidadMotriz} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">Seleccione</option><option>Diestro</option><option>Zurdo</option><option>Ambidiestro</option></select></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.licencia} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded" value={formData.datosPersonales.gradoLicencia} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
@@ -356,8 +387,39 @@ const App = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded" value={formData.datosPersonales.correo} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="tel" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfMovil} onChange={e => handleInputChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="tel" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfLocal} onChange={e => handleInputChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
+                
+                {/* TELÉFONOS CON FORMATO */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label>
+                  <input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfMovil} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label>
+                  <input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfLocal} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} />
+                </div>
+              </div>
+
+              {/* CONTACTOS DE EMERGENCIA */}
+              <div className="bg-red-50 p-4 rounded-lg border border-red-100 mt-6 mb-6">
+                <h4 className="text-sm font-bold text-red-800 mb-3 uppercase">En caso de emergencia comunicarse con</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label>
+                    <input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre1} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label>
+                    <input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono1} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label>
+                    <input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre2} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label>
+                    <input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono2} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
