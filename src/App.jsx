@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Save, CheckCircle, XCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard } from 'lucide-react';
 
 const App = () => {
-  // ================= ESTADOS =================
+  // ================= ESTADOS Y AUTENTICACIÓN =================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [p00Input, setP00Input] = useState('');
+  const [cedulaInput, setCedulaInput] = useState('');
+  const [fechaIngresoInput, setFechaIngresoInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [loginError, setLoginError] = useState(null);
 
@@ -13,7 +15,7 @@ const App = () => {
   const [validationErrors, setValidationErrors] = useState([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false); // Estado para el borrador
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -56,26 +58,21 @@ const App = () => {
 
   const tabs = ["1. Datos Personales", "2. Dirección", "3. Educación e Idiomas", "4. Familia y Salud", "5. Experiencia"];
 
-  // ================= FUNCIONES DE CÁLCULO DE EDAD =================
+  // ================= FUNCIONES =================
   const calcularEdad = (fechaNacimiento) => {
     if (!fechaNacimiento) return '';
     const hoy = new Date();
     const cumpleanos = new Date(fechaNacimiento);
     let edad = hoy.getFullYear() - cumpleanos.getFullYear();
     const m = hoy.getMonth() - cumpleanos.getMonth();
-    if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) {
-      edad--;
-    }
+    if (m < 0 || (m === 0 && hoy.getDate() < cumpleanos.getDate())) edad--;
     return edad.toString();
   };
 
-  // ================= MANEJADORES DE DATOS =================
   const handleInputChange = (section, field, value) => {
     setFormData(prev => {
       const newData = { ...prev, [section]: { ...prev[section], [field]: value } };
-      if (section === 'datosPersonales' && field === 'fechaNacimiento') {
-        newData.datosPersonales.edad = calcularEdad(value);
-      }
+      if (section === 'datosPersonales' && field === 'fechaNacimiento') newData.datosPersonales.edad = calcularEdad(value);
       return newData;
     });
     setValidationErrors([]); 
@@ -92,20 +89,13 @@ const App = () => {
     });
   };
 
-  const addRow = (section, arrayName, emptyObject) => {
-    setFormData(prev => ({ ...prev, [section]: { ...prev[section], [arrayName]: [...prev[section][arrayName], emptyObject] } }));
-  };
+  const addRow = (section, arrayName, emptyObject) => setFormData(prev => ({ ...prev, [section]: { ...prev[section], [arrayName]: [...prev[section][arrayName], emptyObject] } }));
+  const removeRow = (section, arrayName, index) => setFormData(prev => {
+    const newArray = [...prev[section][arrayName]];
+    newArray.splice(index, 1);
+    return { ...prev, [section]: { ...prev[section], [arrayName]: newArray } };
+  });
 
-  const removeRow = (section, arrayName, index) => {
-    setFormData(prev => {
-      const newArray = [...prev[section][arrayName]];
-      newArray.splice(index, 1);
-      return { ...prev, [section]: { ...prev[section], [arrayName]: newArray } };
-    });
-  };
-
-  // ================= LÓGICA DE VALIDACIÓN SECUENCIAL =================
-  // Se le agregó 'data' como parámetro para poder evaluar borradores recuperados
   const validateTab = (tabIndex, data = formData) => {
     const errors = [];
     const dp = data.datosPersonales;
@@ -146,10 +136,7 @@ const App = () => {
 
   const handleNext = () => {
     const errors = validateTab(activeTab);
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
+    if (errors.length > 0) return setValidationErrors(errors);
     setValidationErrors([]);
     const nextTab = activeTab + 1;
     setActiveTab(nextTab);
@@ -163,47 +150,44 @@ const App = () => {
     window.scrollTo(0, 0);
   };
 
-  // ================= LOGIN, BORRADOR & SUBMIT =================
+  // ================= SISTEMA DE LOGIN TRIPLE VALIDACIÓN =================
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginError(null);
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/trabajador/${p00Input}`);
+      const response = await fetch(`/api/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p00: p00Input,
+          cedula: cedulaInput,
+          fecha_ingreso: fechaIngresoInput
+        })
+      });
+      
       if (response.ok) {
         const data = await response.json();
         
         if (data.datos_previos) {
           setFormData(data.datos_previos);
-          
-          // Lógica Inteligente: Determina dónde se quedó el trabajador
           let unlocked = 0;
           for (let i = 0; i <= 4; i++) {
-            if (validateTab(i, data.datos_previos).length === 0) {
-              unlocked = i + 1; // Si pasó, desbloquea la siguiente
-            } else {
-              break; // Si falló, se detiene aquí
-            }
+            if (validateTab(i, data.datos_previos).length === 0) unlocked = i + 1;
+            else break;
           }
-          if (unlocked > 4) unlocked = 4; // Límite en la pestaña 5
+          if (unlocked > 4) unlocked = 4;
           setMaxUnlockedTab(unlocked);
-          setActiveTab(unlocked); // Lo lleva directo a la que le falta
+          setActiveTab(unlocked);
         } else {
-          setFormData(prev => ({
-            ...prev,
-            datosPersonales: {
-              ...prev.datosPersonales,
-              nombres: data.nombres,
-              apellidos: data.apellidos,
-              cedula: data.cedula
-            }
-          }));
+          setFormData(prev => ({ ...prev, datosPersonales: { ...prev.datosPersonales, nombres: data.nombres, apellidos: data.apellidos, cedula: data.cedula } }));
           setMaxUnlockedTab(0);
           setActiveTab(0);
         }
         setIsAuthenticated(true);
       } else {
-        setLoginError('El número de personal (P00) no se encuentra registrado en SAP.');
+        const errData = await response.json();
+        setLoginError(errData.detail || 'Error de validación.');
       }
     } catch (error) {
       setLoginError('Error de conexión con la base de datos.');
@@ -213,80 +197,66 @@ const App = () => {
   };
 
   const handleSaveDraft = async () => {
-    setIsSavingDraft(true);
-    setSubmitStatus(null);
-    setValidationErrors([]);
+    setIsSavingDraft(true); setSubmitStatus(null); setValidationErrors([]);
     try {
-      const response = await fetch('/api/oferta-servicio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
-        setSubmitStatus('draft'); // Etiqueta especial de borrador
-        window.scrollTo(0, 0);
-      } else {
-        setSubmitStatus('error');
-      }
-    } catch (error) {
-      setSubmitStatus('error');
-    } finally {
-      setIsSavingDraft(false);
-    }
+      const response = await fetch('/api/oferta-servicio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (response.ok) { setSubmitStatus('draft'); window.scrollTo(0, 0); } else setSubmitStatus('error');
+    } catch (error) { setSubmitStatus('error'); } finally { setIsSavingDraft(false); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     const errors = validateTab(4);
-    if (errors.length > 0) {
-      setValidationErrors(errors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitStatus(null);
+    if (errors.length > 0) return setValidationErrors(errors);
+    setIsSubmitting(true); setSubmitStatus(null);
     try {
-      const response = await fetch('/api/oferta-servicio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      if (response.ok) {
-        setSubmitStatus('success');
-        window.scrollTo(0, 0);
-      } else {
-        setSubmitStatus('error');
-      }
-    } catch (error) {
-      setSubmitStatus('error');
-    } finally {
-      setIsSubmitting(false);
-    }
+      const response = await fetch('/api/oferta-servicio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (response.ok) { setSubmitStatus('success'); window.scrollTo(0, 0); } else setSubmitStatus('error');
+    } catch (error) { setSubmitStatus('error'); } finally { setIsSubmitting(false); }
   };
 
   const Req = () => <span className="text-red-500 ml-1" title="Campo obligatorio">*</span>;
 
-  // ================= PANTALLA LOGIN =================
+  // ================= PANTALLA LOGIN TRIPLE VALIDACIÓN =================
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-6 text-center">
             <h1 className="text-2xl font-bold">Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
+            <h2 className="text-sm text-blue-200 mt-1">Validación de Trabajador SAP</h2>
           </div>
           <form onSubmit={handleLogin} className="p-8">
-            <div className="mb-6">
+            <p className="text-sm text-gray-600 mb-6 text-center">Por razones de seguridad, ingrese sus credenciales completas para acceder a su ficha.</p>
+            
+            <div className="mb-4">
               <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
                 <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
               </div>
             </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
+                <input type="text" placeholder="Igual que en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Ingreso a la Empresa</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
+                <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700" value={fechaIngresoInput} onChange={(e) => setFechaIngresoInput(e.target.value)} required />
+              </div>
+            </div>
+
             {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
-            <button type="submit" disabled={isSearching || !p00Input} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
-              {isSearching ? 'Consultando BD...' : <><Search size={18} className="mr-2" /> Buscar y Continuar</>}
+            
+            <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaIngresoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
+              {isSearching ? 'Validando Credenciales...' : <><Search size={18} className="mr-2" /> Validar y Entrar</>}
             </button>
           </form>
         </div>
@@ -304,7 +274,7 @@ const App = () => {
             <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión Humana - Actualización de Oferta de Servicio</h2>
           </div>
           <div className="bg-blue-800 p-3 rounded-lg border border-blue-700 min-w-[250px] relative">
-             <button onClick={() => {setIsAuthenticated(false); setSubmitStatus(null); setP00Input(''); setMaxUnlockedTab(0); setActiveTab(0);}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
+             <button onClick={() => {setIsAuthenticated(false); setSubmitStatus(null); setP00Input(''); setCedulaInput(''); setFechaIngresoInput(''); setMaxUnlockedTab(0); setActiveTab(0);}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
             <p className="text-sm font-semibold uppercase pr-8">{formData.datosPersonales.nombres} {formData.datosPersonales.apellidos}</p>
             <p className="text-xs text-blue-300">C.I: {formData.datosPersonales.cedula} | {p00Input}</p>
           </div>
@@ -312,20 +282,16 @@ const App = () => {
       </header>
 
       <main className="max-w-6xl mx-auto mt-6 px-4">
-        
-        {/* BANNER DE ÉXITO FINAL */}
         {submitStatus === 'success' && (
           <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded flex items-start shadow-sm">
             <CheckCircle className="text-green-500 mr-3 mt-0.5" />
             <div><h3 className="text-green-800 font-bold">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-sm mt-1">La información ha sido completada y registrada de forma definitiva.</p></div>
           </div>
         )}
-
-        {/* BANNER DE BORRADOR */}
         {submitStatus === 'draft' && (
           <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-start shadow-sm">
             <Save className="text-blue-500 mr-3 mt-0.5" />
-            <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su P00, continuará exactamente donde lo dejó.</p></div>
+            <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con sus credenciales, continuará exactamente donde lo dejó.</p></div>
           </div>
         )}
 
@@ -333,19 +299,14 @@ const App = () => {
           
           <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50">
             {tabs.map((tab, idx) => (
-              <button 
-                key={idx} 
-                type="button" 
-                onClick={() => { if(idx <= maxUnlockedTab) setActiveTab(idx); }} 
-                disabled={idx > maxUnlockedTab}
+              <button key={idx} type="button" onClick={() => { if(idx <= maxUnlockedTab) setActiveTab(idx); }} disabled={idx > maxUnlockedTab}
                 className={`px-5 py-4 text-sm font-bold whitespace-nowrap transition-colors flex-1 text-center flex items-center justify-center gap-2
                   ${activeTab === idx ? 'border-b-4 border-blue-600 text-blue-800 bg-white' : ''}
                   ${idx > maxUnlockedTab ? 'text-gray-400 cursor-not-allowed opacity-60 bg-gray-100' : 'text-gray-600 hover:bg-gray-100'}
                   ${idx <= maxUnlockedTab && activeTab !== idx ? 'text-gray-700 hover:text-blue-600' : ''}
                 `}
               >
-                {tab}
-                {idx > maxUnlockedTab && <Lock size={14} className="text-gray-400" />}
+                {tab} {idx > maxUnlockedTab && <Lock size={14} className="text-gray-400" />}
               </button>
             ))}
           </div>
@@ -408,13 +369,9 @@ const App = () => {
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.estatura} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.peso} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
-                  
-                  {/* SELECTS PARA ROPA SUPERIOR */}
                   <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaCamisa} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">Sel...</option><option>SS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaChemise} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">Sel...</option><option>SS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaFranela} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">Sel...</option><option>SS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>XXXL</option></select></div>
-                  
-                  {/* TEXTOS DE EJEMPLO PARA EL RESTO */}
                   <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaBluejean} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaBota} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
                   <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaZapato} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
@@ -452,11 +409,7 @@ const App = () => {
               <div className="overflow-x-auto mb-8 border rounded-lg">
                 <table className="w-full text-sm text-left bg-white">
                   <thead className="text-xs text-gray-700 bg-gray-100 border-b">
-                    <tr>
-                      <th className="p-3 w-1/4">Nivel</th>
-                      <th className="p-3 w-1/4">Graduado</th>
-                      <th className="p-3">Título Obtenido</th>
-                    </tr>
+                    <tr><th className="p-3 w-1/4">Nivel</th><th className="p-3 w-1/4">Graduado</th><th className="p-3">Título Obtenido</th></tr>
                   </thead>
                   <tbody>
                     {formData.educacion.niveles.map((nivel, idx) => (
@@ -469,7 +422,6 @@ const App = () => {
                   </tbody>
                 </table>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.educacion.estudiaActualmente} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">No / Sí</option><option>Sí</option><option>No</option></select></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.horario} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
@@ -478,7 +430,6 @@ const App = () => {
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.nivelAlcanzado} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
                 <div className="col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.traslado} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
                   <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Idiomas</h4>
@@ -520,11 +471,8 @@ const App = () => {
                       <tr key={idx} className="border-b hover:bg-gray-50">
                         <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.nombres} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
                         <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.cedula} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
-                        
-                        {/* Fecha de Nacimiento e Input de Edad (Autocalculado) */}
                         <td className="p-1"><input type="date" className="w-full p-1 border rounded" value={dep.fechaNacimiento} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
                         <td className="p-1"><input type="number" readOnly placeholder="Autocalc." className="w-full p-1 border rounded bg-gray-100 text-gray-600" value={dep.edad} /></td>
-                        
                         <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.parentesco} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)} /></td>
                         <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.discapacidad} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'discapacidad', e.target.value)} /></td>
                         <td className="p-1 text-center"><button type="button" onClick={() => removeRow('actividadesFamilia', 'dependientes', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={14} /></button></td>
@@ -533,7 +481,6 @@ const App = () => {
                   </tbody>
                 </table>
               </div>
-
               <h3 className="text-sm font-bold text-gray-800 mb-3 border-b pb-1">Salud del Trabajador</h3>
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                 <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee discapacidad? <Req/> / Especifique</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.discapacidadPropia} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Especifique" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.discapacidadDesc} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} /></div></div>
@@ -547,13 +494,11 @@ const App = () => {
 
             {/* ================= PESTAÑA 5 ================= */}
             <div className={activeTab === 4 ? 'block' : 'hidden'}>
-              
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Admin Pública</h3>
                 <button type="button" onClick={() => addRow('experiencia', 'adminPublica', { organismo: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
               </div>
               <p className="text-xs text-gray-500 mb-3 border-b pb-2">Comenzando por el último o actual</p>
-              
               {formData.experiencia.adminPublica.map((exp, idx) => (
                 <div key={idx} className="bg-gray-50 p-4 border rounded-lg mb-4 relative">
                   <button type="button" onClick={() => removeRow('experiencia', 'adminPublica', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded"><Trash2 size={16} /></button>
@@ -570,17 +515,14 @@ const App = () => {
                   </div>
                 </div>
               ))}
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.esJubilado} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded" value={formData.experiencia.jubiladoDesc} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.enProcesoJubilacion} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">No/Sí</option><option>Sí</option><option>No</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded" value={formData.experiencia.procesoJubilacionDesc} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
               </div>
-
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Empresa Privada</h3>
                 <button type="button" onClick={() => addRow('experiencia', 'empresaPrivada', { empresa: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
               </div>
-              
               {formData.experiencia.empresaPrivada.map((exp, idx) => (
                 <div key={idx} className="bg-gray-50 p-4 border rounded-lg mb-4 relative">
                   <button type="button" onClick={() => removeRow('experiencia', 'empresaPrivada', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded"><Trash2 size={16} /></button>
@@ -601,37 +543,22 @@ const App = () => {
 
             {/* ================= BARRA DE NAVEGACIÓN Y GUARDADO ================= */}
             <div className="mt-10 pt-5 border-t border-gray-200 flex flex-col gap-4 bg-gray-50 p-4 rounded-lg">
-              
               {validationErrors.length > 0 && (
                 <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center border border-red-200 w-full font-medium">
                   <AlertCircle size={18} className="mr-2 flex-shrink-0" />
                   No puede avanzar. Faltan los siguientes campos obligatorios: {validationErrors.join(', ')}.
                 </div>
               )}
-
               <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
-                
-                {/* BOTONES IZQUIERDA: ANTERIOR Y BORRADOR */}
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <button type="button" onClick={handlePrev} disabled={activeTab === 0} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded disabled:opacity-30 flex items-center transition-colors">
-                    <ChevronLeft size={18} className="mr-1" /> Anterior
-                  </button>
-                  
-                  <button type="button" onClick={handleSaveDraft} disabled={isSavingDraft || isSubmitting} className="px-4 py-2 text-blue-700 bg-blue-100 hover:bg-blue-200 font-medium rounded flex items-center transition-colors disabled:opacity-50">
-                    {isSavingDraft ? 'Guardando...' : <><Save size={18} className="mr-1" /> Guardar Borrador</>}
-                  </button>
+                  <button type="button" onClick={handlePrev} disabled={activeTab === 0} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded disabled:opacity-30 flex items-center transition-colors"><ChevronLeft size={18} className="mr-1" /> Anterior</button>
+                  <button type="button" onClick={handleSaveDraft} disabled={isSavingDraft || isSubmitting} className="px-4 py-2 text-blue-700 bg-blue-100 hover:bg-blue-200 font-medium rounded flex items-center transition-colors disabled:opacity-50">{isSavingDraft ? 'Guardando...' : <><Save size={18} className="mr-1" /> Guardar Borrador</>}</button>
                 </div>
-
-                {/* BOTÓN DERECHA: SIGUIENTE O FINALIZAR */}
                 <div className="w-full sm:w-auto">
                   {activeTab < tabs.length - 1 ? (
-                    <button type="button" onClick={handleNext} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center justify-center transition-colors">
-                      Siguiente <ChevronRight size={18} className="ml-1" />
-                    </button>
+                    <button type="button" onClick={handleNext} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center justify-center transition-colors">Siguiente <ChevronRight size={18} className="ml-1" /></button>
                   ) : (
-                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">
-                      {isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}
-                    </button>
+                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}</button>
                   )}
                 </div>
               </div>
