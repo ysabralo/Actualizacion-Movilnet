@@ -233,7 +233,7 @@ const App = () => {
               <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
-                <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                <input type="text" placeholder="Ej. 2XXXXX" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
               </div>
             </div>
 
@@ -241,7 +241,7 @@ const App = () => {
               <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                <input type="text" placeholder="Igual que en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+                <input type="text" placeholder="Igual que en la Cédula" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
               </div>
             </div>
 
