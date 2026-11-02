@@ -342,115 +342,112 @@ const App = () => {
 
   const Req = () => <span className="text-red-500 ml-1" title="Campo obligatorio">*</span>;
 
-  // ================= PANTALLAS DE ACCESO =================
+  // ================= PANTALLAS DE ACCESO (RESPONSIVE) =================
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
+      <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-3 sm:p-6">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
-          <div className="bg-blue-900 text-white p-6 text-center">
-            <h1 className="text-2xl font-bold">Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
+          <div className="bg-blue-900 text-white p-5 sm:p-6 text-center">
+            <h1 className="text-xl sm:text-2xl font-bold">Movilnet C.A.</h1>
+            <h2 className="text-xs sm:text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
           </div>
 
           <>
-            {/* OPCIÓN 1: LOGIN HABITUAL (Cédula + Clave) */}
             {loginStep === 'login' && (
-              <form onSubmit={handleLoginClave} className="p-8">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
+              <form onSubmit={handleLoginClave} className="p-6 sm:p-8">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
                 
                 <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Ej. 12345678" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Ej. 12345678" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Key className="h-5 w-5 text-gray-400" /></div>
-                    <input type="password" placeholder="Tu clave de acceso" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
+                    <input type="password" placeholder="Tu clave de acceso" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
                   </div>
                 </div>
 
-                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs sm:text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
                 
-                <button type="submit" disabled={isSearching || !loginCedula || !loginClave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
+                <button type="submit" disabled={isSearching || !loginCedula || !loginClave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4 text-sm">
                   {isSearching ? 'Ingresando...' : <><Search size={18} className="mr-2" /> Ingresar</>}
                 </button>
 
                 <div className="text-center mt-4 border-t pt-4">
-                  <button type="button" onClick={() => { setLoginStep('verifyFirst'); setLoginError(null); }} className="text-sm text-blue-600 hover:underline font-medium">
+                  <button type="button" onClick={() => { setLoginStep('verifyFirst'); setLoginError(null); }} className="text-xs sm:text-sm text-blue-600 hover:underline font-medium">
                     ¿Es tu primer ingreso? Regístrate aquí
                   </button>
                 </div>
               </form>
             )}
 
-            {/* OPCIÓN 2: PASO 1 - VALIDACIÓN SAP (P00 + Cédula + Fecha Nacimiento) */}
             {loginStep === 'verifyFirst' && (
-              <form onSubmit={handleVerifySap} className="p-8">
-                <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Primer Ingreso - Validación SAP</h3>
+              <form onSubmit={handleVerifySap} className="p-6 sm:p-8">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 text-center">Primer Ingreso - Validación SAP</h3>
                 <p className="text-xs text-gray-500 mb-6 text-center">Ingrese sus datos de empleado para autenticar su identidad.</p>
                 
                 <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Cédula registrada en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Cédula registrada en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
-                    <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
+                    <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700 text-sm" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
                   </div>
                 </div>
 
-                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs sm:text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
                 
-                <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaNacimientoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
+                <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaNacimientoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4 text-sm">
                   {isSearching ? 'Verificando...' : 'Verificar y Continuar'}
                 </button>
 
                 <div className="text-center mt-2">
-                  <button type="button" onClick={() => { setLoginStep('login'); setLoginError(null); }} className="text-sm text-gray-600 hover:underline">
+                  <button type="button" onClick={() => { setLoginStep('login'); setLoginError(null); }} className="text-xs sm:text-sm text-gray-600 hover:underline">
                     ← Volver al inicio de sesión
                   </button>
                 </div>
               </form>
             )}
 
-            {/* OPCIÓN 3: PASO 2 - CREAR CLAVE PERSONAL */}
             {loginStep === 'createPassword' && (
-              <form onSubmit={handleCreatePassword} className="p-8">
-                <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Crea tu Clave Personal</h3>
+              <form onSubmit={handleCreatePassword} className="p-6 sm:p-8">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 text-center">Crea tu Clave Personal</h3>
                 <p className="text-xs text-gray-500 mb-6 text-center">Esta clave te servirá para ingresar en tus próximas visitas sin necesidad de validar tus datos de SAP.</p>
                 
                 <div className="mb-4">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
-                  <input type="password" placeholder="Mínimo 4 caracteres" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
+                  <input type="password" placeholder="Mínimo 4 caracteres" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
                 </div>
 
                 <div className="mb-6">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
-                  <input type="password" placeholder="Repite tu clave" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                  <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
+                  <input type="password" placeholder="Repite tu clave" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
                 </div>
 
-                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs sm:text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
                 
-                <button type="submit" disabled={isSearching || !newPassword || !confirmPassword} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
+                <button type="submit" disabled={isSearching || !newPassword || !confirmPassword} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors text-sm">
                   {isSearching ? 'Guardando...' : 'Guardar Clave y Entrar'}
                 </button>
               </form>
@@ -462,167 +459,168 @@ const App = () => {
     );
   }
 
-  // ================= PANTALLA PRINCIPAL (FORMULARIO) =================
+  // ================= PANTALLA PRINCIPAL (FORMULARIO ADAPTABLE) =================
   return (
     <div className="min-h-screen bg-gray-100 text-left pb-12 font-sans">
-      <header className="bg-blue-900 text-white p-5 shadow-md sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <header className="bg-blue-900 text-white p-4 sm:p-5 shadow-md sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Telecomunicaciones Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión Humana - Actualización de Oferta de Servicio</h2>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-center sm:text-left">Telecomunicaciones Movilnet C.A.</h1>
+            <h2 className="text-xs sm:text-sm text-blue-200 mt-0.5 text-center sm:text-left">Gerencia General de Gestión Humana - Oferta de Servicio</h2>
           </div>
-          <div className="bg-blue-800 p-3 rounded-lg border border-blue-700 min-w-[250px] relative">
+          <div className="bg-blue-800 p-2.5 sm:p-3 rounded-lg border border-blue-700 w-full sm:w-auto min-w-[240px] relative">
              <button onClick={() => {setIsAuthenticated(false); setLoginStep('login'); setSubmitStatus(null); setLoginCedula(''); setLoginClave('');}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
-            <p className="text-sm font-semibold uppercase pr-8">{formData.datosPersonales.nombres} {formData.datosPersonales.apellidos}</p>
+            <p className="text-xs sm:text-sm font-semibold uppercase pr-10">{formData.datosPersonales.nombres} {formData.datosPersonales.apellidos}</p>
             <p className="text-xs text-blue-300">C.I: {formData.datosPersonales.cedula}</p>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto mt-6 px-4">
+      <main className="max-w-6xl mx-auto mt-4 sm:mt-6 px-2 sm:px-4">
         <>
           {submitStatus === 'success' && (
             <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded flex items-start shadow-sm">
-              <CheckCircle className="text-green-500 mr-3 mt-0.5" />
-              <div><h3 className="text-green-800 font-bold">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-sm mt-1">La información ha sido completada y registrada de forma definitiva.</p></div>
+              <CheckCircle className="text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+              <div><h3 className="text-green-800 font-bold text-sm sm:text-base">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-xs sm:text-sm mt-1">La información ha sido completada y registrada de forma definitiva.</p></div>
             </div>
           )}
           {submitStatus === 'draft' && (
             <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-start shadow-sm">
-              <Save className="text-blue-500 mr-3 mt-0.5" />
-              <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su cédula y clave, continuará exactamente donde lo dejó.</p></div>
+              <Save className="text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
+              <div><h3 className="text-blue-800 font-bold text-sm sm:text-base">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-xs sm:text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su cédula y clave, continuará exactamente donde lo dejó.</p></div>
             </div>
           )}
         </>
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           
-          <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50">
+          {/* Pestañas de Navegación Responsivas con scroll horizontal en pantallas pequeñas */}
+          <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50 scrollbar-thin">
             {tabs.map((tab, idx) => (
               <button key={idx} type="button" onClick={() => { if(idx <= maxUnlockedTab) setActiveTab(idx); }} disabled={idx > maxUnlockedTab}
-                className={`px-5 py-4 text-sm font-bold whitespace-nowrap transition-colors flex-1 text-center flex items-center justify-center gap-2
+                className={`px-3 sm:px-5 py-3 sm:py-4 text-xs sm:text-sm font-bold whitespace-nowrap transition-colors flex-1 text-center flex items-center justify-center gap-1.5
                   ${activeTab === idx ? 'border-b-4 border-blue-600 text-blue-800 bg-white' : ''}
                   ${idx > maxUnlockedTab ? 'text-gray-400 cursor-not-allowed opacity-60 bg-gray-100' : 'text-gray-600 hover:bg-gray-100'}
                   ${idx <= maxUnlockedTab && activeTab !== idx ? 'text-gray-700 hover:text-blue-600' : ''}
                 `}
               >
-                {tab} {idx > maxUnlockedTab && <Lock size={14} className="text-gray-400" />}
+                <span>{tab}</span> {idx > maxUnlockedTab && <Lock size={13} className="text-gray-400 flex-shrink-0" />}
               </button>
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8">
             
             {/* ================= PESTAÑA 1 ================= */}
             <div className={activeTab === 0 ? 'block' : 'hidden'}>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <div><label className="block text-xs font-bold text-gray-700 mb-1">Cédula de Identidad</label><input type="text" value={formData.datosPersonales.cedula} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700" /></div>
-                <div><label className="block text-xs font-bold text-gray-700 mb-1">Nombres</label><input type="text" value={formData.datosPersonales.nombres} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700" /></div>
-                <div><label className="block text-xs font-bold text-gray-700 mb-1">Apellidos</label><input type="text" value={formData.datosPersonales.apellidos} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700" /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8 bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100">
+                <div><label className="block text-xs font-bold text-gray-700 mb-1">Cédula de Identidad</label><input type="text" value={formData.datosPersonales.cedula} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
+                <div><label className="block text-xs font-bold text-gray-700 mb-1">Nombres</label><input type="text" value={formData.datosPersonales.nombres} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
+                <div><label className="block text-xs font-bold text-gray-700 mb-1">Apellidos</label><input type="text" value={formData.datosPersonales.apellidos} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">RIF <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.rif} onChange={e => handleInputChange('datosPersonales', 'rif', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.nacionalidad} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.gaceta} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">RIF <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.rif} onChange={e => handleInputChange('datosPersonales', 'rif', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.nacionalidad} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gaceta} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.lugarNacimiento} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" className="w-full p-2 border rounded" value={formData.datosPersonales.fechaNacimiento} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.lugarNacimiento} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.fechaNacimiento} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalc." className="w-full p-2 border rounded bg-gray-100 text-gray-600" value={formData.datosPersonales.edad} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.sexo} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalc." className="w-full p-2 border rounded bg-gray-100 text-gray-600 text-xs sm:text-sm" value={formData.datosPersonales.edad} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.sexo} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Grupo Sanguíneo</label>
-                  <select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.grupoSanguineo} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
+                  <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.grupoSanguineo} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
                     <option value="">SELECCIONE</option><option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
                   </select>
                 </div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.estadoCivil} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">SELECCIONE</option><option value="SOLTERO">SOLTERO</option><option value="CASADO">CASADO</option><option value="VIUDO">VIUDO</option><option value="DIVORCIADO">DIVORCIADO</option><option value="CONCUBINO">CONCUBINO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.habilidadMotriz} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">SELECCIONE</option><option value="DIESTRO">DIESTRO</option><option value="ZURDO">ZURDO</option><option value="AMBIDIESTRO">AMBIDIESTRO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.licencia} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded" value={formData.datosPersonales.gradoLicencia} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.estadoCivil} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">SELECCIONE</option><option value="SOLTERO">SOLTERO</option><option value="CASADO">CASADO</option><option value="VIUDO">VIUDO</option><option value="DIVORCIADO">DIVORCIADO</option><option value="CONCUBINO">CONCUBINO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.habilidadMotriz} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">SELECCIONE</option><option value="DIESTRO">DIESTRO</option><option value="ZURDO">ZURDO</option><option value="AMBIDIESTRO">AMBIDIESTRO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.licencia} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gradoLicencia} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.tipoVivienda} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white" value={formData.datosPersonales.condicionVivienda} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.alergico} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.alergiaDesc} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.tipoVivienda} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.condicionVivienda} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.alergico} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.alergiaDesc} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded" value={formData.datosPersonales.profesion} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro de Colegio" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 border-t pt-4">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.profesion} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro de Colegio" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded lowercase" value={formData.datosPersonales.correo} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfMovil} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded" value={formData.datosPersonales.tlfLocal} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded lowercase text-xs sm:text-sm" value={formData.datosPersonales.correo} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tlfMovil} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tlfLocal} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
               </div>
 
-              <div className="bg-red-50 p-4 rounded-lg border border-red-100 mt-6 mb-6">
-                <h4 className="text-sm font-bold text-red-800 mb-3 uppercase">En caso de emergencia comunicarse con</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre1} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono1} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaNombre2} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded focus:ring-red-500" value={formData.datosPersonales.emergenciaTelefono2} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
+              <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-100 mt-6 mb-6">
+                <h4 className="text-xs sm:text-sm font-bold text-red-800 mb-3 uppercase">En caso de emergencia comunicarse con</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaNombre1} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaTelefono1} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaNombre2} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaTelefono2} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.datosPersonales.carnetPatria} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded" value={formData.datosPersonales.nroCarnetPatria} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.carnetPatria} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.nroCarnetPatria} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg border mt-6">
-                <h4 className="text-sm font-bold text-gray-700 mb-3 uppercase">Tallas y Medidas</h4>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                  <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.estatura} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.peso} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaCamisa} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaChemise} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-sm bg-white" value={formData.datosPersonales.tallaFranela} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaBluejean} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaBota} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaZapato} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Casco</label><input type="text" placeholder="Ej. L o 58cm" className="w-full p-2 border rounded text-sm" value={formData.datosPersonales.tallaCasco} onChange={e => handleInputChange('datosPersonales', 'tallaCasco', e.target.value)} /></div>
+              <div className="bg-gray-50 p-3 sm:p-4 rounded-lg border mt-6">
+                <h4 className="text-xs sm:text-sm font-bold text-gray-700 mb-3 uppercase">Tallas y Medidas</h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+                  <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.estatura} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.peso} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.datosPersonales.tallaCamisa} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.datosPersonales.tallaChemise} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.datosPersonales.tallaFranela} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaBluejean} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaBota} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaZapato} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Casco</label><input type="text" placeholder="Ej. L o 58cm" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaCasco} onChange={e => handleInputChange('datosPersonales', 'tallaCasco', e.target.value)} /></div>
                 </div>
               </div>
             </div>
 
             {/* ================= PESTAÑA 2 ================= */}
             <div className={activeTab === 1 ? 'block' : 'hidden'}>
-              <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dirección de Habitación</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.estado} onChange={e => handleInputChange('direccion', 'estado', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.ciudad} onChange={e => handleInputChange('direccion', 'ciudad', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.municipio} onChange={e => handleInputChange('direccion', 'municipio', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.parroquia} onChange={e => handleInputChange('direccion', 'parroquia', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Urbanización</label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.urbanizacion} onChange={e => handleInputChange('direccion', 'urbanizacion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Sector</label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.sector} onChange={e => handleInputChange('direccion', 'sector', e.target.value)} /></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Avenida, calle o cruce <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.avenida} onChange={e => handleInputChange('direccion', 'avenida', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Código Postal</label><input type="text" className="w-full p-2 border rounded" value={formData.direccion.codigoPostal} onChange={e => handleInputChange('direccion', 'codigoPostal', e.target.value)} /></div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dirección de Habitación</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 mb-6">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.estado} onChange={e => handleInputChange('direccion', 'estado', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.ciudad} onChange={e => handleInputChange('direccion', 'ciudad', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.municipio} onChange={e => handleInputChange('direccion', 'municipio', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.parroquia} onChange={e => handleInputChange('direccion', 'parroquia', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Urbanización</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.urbanizacion} onChange={e => handleInputChange('direccion', 'urbanizacion', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Sector</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.sector} onChange={e => handleInputChange('direccion', 'sector', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Avenida, calle o cruce <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.avenida} onChange={e => handleInputChange('direccion', 'avenida', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Código Postal</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.codigoPostal} onChange={e => handleInputChange('direccion', 'codigoPostal', e.target.value)} /></div>
               </div>
-              <div className="bg-gray-50 p-4 border rounded-lg">
+              <div className="bg-gray-50 p-3 sm:p-4 border rounded-lg">
                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase">Identificación del Inmueble</label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div><input type="text" placeholder="Edf./Res./Casa" className="w-full p-2 border rounded" value={formData.direccion.inmueble} onChange={e => handleInputChange('direccion', 'inmueble', e.target.value)} /></div>
-                  <div><input type="text" placeholder="Piso o Nivel" className="w-full p-2 border rounded" value={formData.direccion.piso} onChange={e => handleInputChange('direccion', 'piso', e.target.value)} /></div>
-                  <div><input type="text" placeholder="Apto. o N°" className="w-full p-2 border rounded" value={formData.direccion.apto} onChange={e => handleInputChange('direccion', 'apto', e.target.value)} /></div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div><input type="text" placeholder="Edf./Res./Casa" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.inmueble} onChange={e => handleInputChange('direccion', 'inmueble', e.target.value)} /></div>
+                  <div><input type="text" placeholder="Piso o Nivel" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.piso} onChange={e => handleInputChange('direccion', 'piso', e.target.value)} /></div>
+                  <div><input type="text" placeholder="Apto. o N°" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.apto} onChange={e => handleInputChange('direccion', 'apto', e.target.value)} /></div>
                 </div>
               </div>
             </div>
 
             {/* ================= PESTAÑA 3 ================= */}
             <div className={activeTab === 2 ? 'block' : 'hidden'}>
-              <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Educación Formal</h3>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Educación Formal</h3>
               <div className="overflow-x-auto mb-8 border rounded-lg">
-                <table className="w-full text-sm text-left bg-white">
+                <table className="w-full text-xs sm:text-sm text-left bg-white min-w-[500px]">
                   <thead className="text-xs text-gray-700 bg-gray-100 border-b">
                     <tr><th className="p-3 w-1/4">Nivel</th><th className="p-3 w-1/4">Graduado</th><th className="p-3">Título Obtenido</th></tr>
                   </thead>
@@ -637,15 +635,15 @@ const App = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white" value={formData.educacion.estudiaActualmente} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.horario} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.institucion} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.carrera} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.nivelAlcanzado} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
-                <div className="col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" className="w-full p-2 border rounded" value={formData.educacion.traslado} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.educacion.estudiaActualmente} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.horario} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.institucion} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.carrera} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.nivelAlcanzado} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
+                <div className="sm:col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.traslado} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 <div>
                   <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Idiomas</h4>
                   {formData.programasIdiomas.idiomas.map((idioma, idx) => (
@@ -671,39 +669,39 @@ const App = () => {
             {/* ================= PESTAÑA 4 ================= */}
             <div className={activeTab === 3 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="text-lg font-bold text-gray-800">Personas Dependientes</h3>
-                <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', discapacidad: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded hover:bg-blue-200 flex items-center font-bold">
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Personas Dependientes</h3>
+                <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', discapacidad: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
                   <Plus size={16} className="mr-1"/> Añadir Familiar
                 </button>
               </div>
               <div className="overflow-x-auto mb-8 border rounded-lg">
-                <table className="w-full text-xs text-left bg-white">
+                <table className="w-full text-xs text-left bg-white min-w-[650px]">
                   <thead className="bg-gray-100 border-b">
                     <tr><th className="p-2 w-1/4">Apellidos y Nombres</th><th className="p-2">Cédula</th><th className="p-2">F. Nacimiento</th><th className="p-2 w-16">Edad</th><th className="p-2">Parentesco</th><th className="p-2">Discapacidad</th><th className="p-2 w-10 text-center">X</th></tr>
                   </thead>
                   <tbody>
                     {formData.actividadesFamilia.dependientes.map((dep, idx) => (
                       <tr key={idx} className="border-b hover:bg-gray-50">
-                        <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.nombres} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
-                        <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.cedula} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
-                        <td className="p-1"><input type="date" className="w-full p-1 border rounded" value={dep.fechaNacimiento} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
-                        <td className="p-1"><input type="number" readOnly placeholder="Autocalc." className="w-full p-1 border rounded bg-gray-100 text-gray-600" value={dep.edad} /></td>
-                        <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.parentesco} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)} /></td>
-                        <td className="p-1"><input type="text" className="w-full p-1 border rounded" value={dep.discapacidad} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'discapacidad', e.target.value)} /></td>
-                        <td className="p-1 text-center"><button type="button" onClick={() => removeRow('actividadesFamilia', 'dependientes', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded"><Trash2 size={14} /></button></td>
+                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.nombres} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
+                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.cedula} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
+                        <td className="p-1"><input type="date" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
+                        <td className="p-1"><input type="number" readOnly placeholder="Auto." className="w-full p-1.5 border rounded bg-gray-100 text-gray-600 text-xs" value={dep.edad} /></td>
+                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.parentesco} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)} /></td>
+                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.discapacidad} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'discapacidad', e.target.value)} /></td>
+                        <td className="p-1 text-center"><button type="button" onClick={() => removeRow('actividadesFamilia', 'dependientes', idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded"><Trash2 size={14} /></button></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <h3 className="text-sm font-bold text-gray-800 mb-3 border-b pb-1">Salud del Trabajador</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee discapacidad? <Req/> / Especifique</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.discapacidadPropia} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.discapacidadDesc} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} /></div></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique el N° de Carnet CONAPDIS</label><input type="text" className="w-full p-2 border rounded" value={formData.actividadesFamilia.carnetConapdis} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee discapacidad? <Req/> / Especifique</label><div className="flex gap-2"><select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={formData.actividadesFamilia.discapacidadPropia} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={formData.actividadesFamilia.discapacidadDesc} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} /></div></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique el N° de Carnet CONAPDIS</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.actividadesFamilia.carnetConapdis} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} /></div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/4 p-2 border rounded bg-white" value={formData.actividadesFamilia.tomaMedicamento} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-3/4 p-2 border rounded" value={formData.actividadesFamilia.medicamentoCual} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
-                <div className="col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded" value={formData.actividadesFamilia.medicamentoMotivo} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={formData.actividadesFamilia.tomaMedicamento} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={formData.actividadesFamilia.medicamentoCual} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.actividadesFamilia.medicamentoMotivo} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
               </div>
             </div>
 
@@ -711,18 +709,18 @@ const App = () => {
             <div className={activeTab === 4 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Admin Pública</h3>
-                <button type="button" onClick={() => addRow('experiencia', 'adminPublica', { organismo: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
+                <button type="button" onClick={() => addRow('experiencia', 'adminPublica', { organismo: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1.5 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
               </div>
               <p className="text-xs text-gray-500 mb-3 border-b pb-2">Comenzando por el último o actual</p>
               {formData.experiencia.adminPublica.map((exp, idx) => (
-                <div key={idx} className="bg-gray-50 p-4 border rounded-lg mb-4 relative">
-                  <button type="button" onClick={() => removeRow('experiencia', 'adminPublica', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded"><Trash2 size={16} /></button>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
-                    <div className="col-span-2"><label className="block text-xs text-gray-600 mb-1">Organismo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.organismo} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'organismo', e.target.value)} /></div>
+                <div key={idx} className="bg-gray-50 p-3 sm:p-4 border rounded-lg mb-4 relative">
+                  <button type="button" onClick={() => removeRow('experiencia', 'adminPublica', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 size={16} /></button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Organismo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.organismo} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'organismo', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.direccion} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'direccion', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.telefono} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'telefono', e.target.value)} /></div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.cargo} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'cargo', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.ingreso} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'ingreso', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.egreso} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'egreso', e.target.value)} /></div>
@@ -730,23 +728,23 @@ const App = () => {
                   </div>
                 </div>
               ))}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.esJubilado} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded" value={formData.experiencia.jubiladoDesc} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white" value={formData.experiencia.enProcesoJubilacion} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded" value={formData.experiencia.procesoJubilacionDesc} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={formData.experiencia.esJubilado} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded text-xs" value={formData.experiencia.jubiladoDesc} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={formData.experiencia.enProcesoJubilacion} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded text-xs" value={formData.experiencia.procesoJubilacionDesc} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Empresa Privada</h3>
-                <button type="button" onClick={() => addRow('experiencia', 'empresaPrivada', { empresa: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
+                <button type="button" onClick={() => addRow('experiencia', 'empresaPrivada', { empresa: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1.5 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
               </div>
               {formData.experiencia.empresaPrivada.map((exp, idx) => (
-                <div key={idx} className="bg-gray-50 p-4 border rounded-lg mb-4 relative">
-                  <button type="button" onClick={() => removeRow('experiencia', 'empresaPrivada', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1 rounded"><Trash2 size={16} /></button>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-2">
-                    <div className="col-span-2"><label className="block text-xs text-gray-600 mb-1">Empresa</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.empresa} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'empresa', e.target.value)} /></div>
+                <div key={idx} className="bg-gray-50 p-3 sm:p-4 border rounded-lg mb-4 relative">
+                  <button type="button" onClick={() => removeRow('experiencia', 'empresaPrivada', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 size={16} /></button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-2">
+                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Empresa</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.empresa} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'empresa', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.direccion} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'direccion', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.telefono} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'telefono', e.target.value)} /></div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.cargo} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'cargo', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.ingreso} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'ingreso', e.target.value)} /></div>
                     <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.egreso} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'egreso', e.target.value)} /></div>
@@ -757,23 +755,23 @@ const App = () => {
             </div>
 
             {/* ================= BARRA DE NAVEGACIÓN Y GUARDADO ================= */}
-            <div className="mt-10 pt-5 border-t border-gray-200 flex flex-col gap-4 bg-gray-50 p-4 rounded-lg">
+            <div className="mt-8 sm:mt-10 pt-4 sm:pt-5 border-t border-gray-200 flex flex-col gap-3 sm:gap-4 bg-gray-50 p-3 sm:p-4 rounded-lg">
               {validationErrors.length > 0 && (
-                <div className="bg-red-50 text-red-600 text-sm p-3 rounded-lg flex items-center border border-red-200 w-full font-medium">
+                <div className="bg-red-50 text-red-600 text-xs sm:text-sm p-3 rounded-lg flex items-center border border-red-200 w-full font-medium">
                   <AlertCircle size={18} className="mr-2 flex-shrink-0" />
                   No puede avanzar. Faltan los siguientes campos obligatorios: {validationErrors.join(', ')}.
                 </div>
               )}
-              <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-3 sm:gap-4">
                 <div className="flex gap-2 w-full sm:w-auto">
-                  <button type="button" onClick={handlePrev} disabled={activeTab === 0} className="px-5 py-2 text-gray-600 font-medium hover:bg-gray-200 rounded disabled:opacity-30 flex items-center transition-colors"><ChevronLeft size={18} className="mr-1" /> Anterior</button>
-                  <button type="button" onClick={handleSaveDraft} disabled={isSavingDraft || isSubmitting} className="px-4 py-2 text-blue-700 bg-blue-100 hover:bg-blue-200 font-medium rounded flex items-center transition-colors disabled:opacity-50">{isSavingDraft ? 'Guardando...' : <><Save size={18} className="mr-1" /> Guardar Borrador</>}</button>
+                  <button type="button" onClick={handlePrev} disabled={activeTab === 0} className="flex-1 sm:flex-none px-4 sm:px-5 py-2 text-gray-600 text-xs sm:text-sm font-medium hover:bg-gray-200 rounded disabled:opacity-30 flex items-center justify-center transition-colors"><ChevronLeft size={16} className="mr-1" /> Anterior</button>
+                  <button type="button" onClick={handleSaveDraft} disabled={isSavingDraft || isSubmitting} className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-blue-700 bg-blue-100 hover:bg-blue-200 text-xs sm:text-sm font-medium rounded flex items-center justify-center transition-colors disabled:opacity-50">{isSavingDraft ? 'Guardando...' : <><Save size={16} className="mr-1" /> Borrador</>}</button>
                 </div>
                 <div className="w-full sm:w-auto">
                   {activeTab < tabs.length - 1 ? (
-                    <button type="button" onClick={handleNext} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center justify-center transition-colors">Siguiente <ChevronRight size={18} className="ml-1" /></button>
+                    <button type="button" onClick={handleNext} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 text-xs sm:text-sm rounded shadow flex items-center justify-center transition-colors">Siguiente <ChevronRight size={16} className="ml-1" /></button>
                   ) : (
-                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}</button>
+                    <button type="submit" disabled={isSubmitting} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 sm:px-8 text-xs sm:text-sm rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={16} className="mr-2" /> Finalizar y Guardar</>}</button>
                   )}
                 </div>
               </div>
