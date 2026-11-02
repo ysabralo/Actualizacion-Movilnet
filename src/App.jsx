@@ -112,7 +112,8 @@ const App = () => {
       finalValue = field === 'correo' ? value.toLowerCase() : value.toUpperCase();
     }
     setFormData(prev => {
-      const newData = { ...prev, [section]: { ...prev[section], [field]: finalValue } };
+      const targetSection = prev[section] || {};
+      const newData = { ...prev, [section]: { ...targetSection, [field]: finalValue } };
       if (section === 'datosPersonales' && field === 'fechaNacimiento') newData.datosPersonales.edad = calcularEdad(finalValue);
       return newData;
     });
@@ -129,30 +130,39 @@ const App = () => {
   const handleArrayChange = (section, arrayName, index, field, value) => {
     let finalValue = typeof value === 'string' ? value.toUpperCase() : value;
     setFormData(prev => {
-      const newArray = [...prev[section][arrayName]];
-      newArray[index] = { ...newArray[index], [field]: finalValue };
+      const targetSection = prev[section] || {};
+      const currentArray = Array.isArray(targetSection[arrayName]) ? targetSection[arrayName] : [];
+      const newArray = [...currentArray];
+      newArray[index] = { ...(newArray[index] || {}), [field]: finalValue };
       if (section === 'actividadesFamilia' && arrayName === 'dependientes' && field === 'fechaNacimiento') {
         newArray[index].edad = calcularEdad(finalValue);
       }
-      return { ...prev, [section]: { ...prev[section], [arrayName]: newArray } };
+      return { ...prev, [section]: { ...targetSection, [arrayName]: newArray } };
     });
   };
 
-  const addRow = (section, arrayName, emptyObject) => setFormData(prev => ({ ...prev, [section]: { ...prev[section], [arrayName]: [...prev[section][arrayName], emptyObject] } }));
+  const addRow = (section, arrayName, emptyObject) => setFormData(prev => {
+    const targetSection = prev[section] || {};
+    const currentArray = Array.isArray(targetSection[arrayName]) ? targetSection[arrayName] : [];
+    return { ...prev, [section]: { ...targetSection, [arrayName]: [...currentArray, emptyObject] } };
+  });
+
   const removeRow = (section, arrayName, index) => setFormData(prev => {
-    const newArray = [...prev[section][arrayName]];
+    const targetSection = prev[section] || {};
+    const currentArray = Array.isArray(targetSection[arrayName]) ? targetSection[arrayName] : [];
+    const newArray = [...currentArray];
     newArray.splice(index, 1);
-    return { ...prev, [section]: { ...prev[section], [arrayName]: newArray } };
+    return { ...prev, [section]: { ...targetSection, [arrayName]: newArray } };
   });
 
   const validateTab = (tabIndex, data = formData) => {
     const errors = [];
-    const dp = data.datosPersonales;
-    const dir = data.direccion;
-    const ed = data.educacion;
-    const fs = data.actividadesFamilia;
-    const exp = data.experiencia;
-    const hcm = data.hcmPolizas;
+    const dp = data.datosPersonales || {};
+    const dir = data.direccion || {};
+    const ed = data.educacion || {};
+    const fs = data.actividadesFamilia || {};
+    const exp = data.experiencia || {};
+    const hcm = data.hcmPolizas || {};
 
     if (tabIndex === 0) {
       if (!dp.rif) errors.push("RIF");
@@ -188,7 +198,8 @@ const App = () => {
       }
       if (!fs.tomaMedicamento) errors.push("¿Toma medicamento?");
 
-      fs.dependientes.forEach((dep, idx) => {
+      const dependientes = Array.isArray(fs.dependientes) ? fs.dependientes : [];
+      dependientes.forEach((dep, idx) => {
         if ((dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') && !dep.discapacidad) {
           errors.push(`N° Carnet CONAPDIS requerido para el familiar #${idx + 1} (${dep.parentesco})`);
         }
@@ -199,9 +210,6 @@ const App = () => {
     } else if (tabIndex === 5) {
       if (hcm.familiarMovilnet === 'SÍ' && !hcm.familiarMovilnetParentesco) {
         errors.push("Indique el parentesco del familiar en Movilnet");
-      }
-      if (hcm.tieneOtroSeguro === 'SÍ' && hcm.segurosVigentes.length === 0) {
-        errors.push("Debe registrar al menos un seguro vigente");
       }
     }
     return errors;
@@ -323,8 +331,24 @@ const App = () => {
 
   const processSuccessfulLogin = (data) => {
     if (data.datos_previos) {
-      const formattedData = convertDataToUppercase(data.datos_previos);
-      setFormData(formattedData);
+      const rawData = data.datos_previos;
+      // Blindaje: Si el registro guardado no tiene hcmPolizas, lo inicializamos para evitar crash en blanco
+      if (!rawData.hcmPolizas) {
+        rawData.hcmPolizas = {
+          familiarMovilnet: 'NO',
+          familiarMovilnetParentesco: '',
+          tieneOtroSeguro: 'NO',
+          segurosVigentes: [],
+          beneficiariosFallecimiento: []
+        };
+      }
+      const formattedData = convertDataToUppercase(rawData);
+      setFormData(prev => ({
+        ...prev,
+        ...formattedData,
+        hcmPolizas: { ...prev.hcmPolizas, ...(formattedData.hcmPolizas || {}) }
+      }));
+
       let unlocked = 0;
       for (let i = 0; i <= 5; i++) {
         if (validateTab(i, formattedData).length === 0) unlocked = i + 1;
@@ -338,9 +362,9 @@ const App = () => {
         ...prev, 
         datosPersonales: { 
           ...prev.datosPersonales, 
-          nombres: data.nombres.toUpperCase(), 
-          apellidos: data.apellidos.toUpperCase(), 
-          cedula: data.cedula.toUpperCase() 
+          nombres: (data.nombres || '').toUpperCase(), 
+          apellidos: (data.apellidos || '').toUpperCase(), 
+          cedula: (data.cedula || '').toUpperCase() 
         } 
       }));
       setMaxUnlockedTab(0);
@@ -369,6 +393,15 @@ const App = () => {
   };
 
   const Req = () => <span className="text-red-500 ml-1" title="Campo obligatorio">*</span>;
+
+  // Garantizar acceso seguro a propiedades anidadas en el render
+  const safeData = formData || {};
+  const dp = safeData.datosPersonales || {};
+  const dir = safeData.direccion || {};
+  const ed = safeData.educacion || {};
+  const fs = safeData.actividadesFamilia || {};
+  const exp = safeData.experiencia || {};
+  const hcm = safeData.hcmPolizas || {};
 
   // ================= PANTALLAS DE ACCESO (RESPONSIVE) =================
   if (!isAuthenticated) {
@@ -498,8 +531,8 @@ const App = () => {
           </div>
           <div className="bg-blue-800 p-2.5 sm:p-3 rounded-lg border border-blue-700 w-full sm:w-auto min-w-[240px] relative">
              <button onClick={() => {setIsAuthenticated(false); setLoginStep('login'); setSubmitStatus(null); setLoginCedula(''); setLoginClave('');}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
-            <p className="text-xs sm:text-sm font-semibold uppercase pr-10">{formData.datosPersonales.nombres} {formData.datosPersonales.apellidos}</p>
-            <p className="text-xs text-blue-300">C.I: {formData.datosPersonales.cedula}</p>
+            <p className="text-xs sm:text-sm font-semibold uppercase pr-10">{dp.nombres} {dp.apellidos}</p>
+            <p className="text-xs text-blue-300">C.I: {dp.cedula}</p>
           </div>
         </div>
       </header>
@@ -541,93 +574,92 @@ const App = () => {
             {/* ================= PESTAÑA 1 ================= */}
             <div className={activeTab === 0 ? 'block' : 'hidden'}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8 bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100">
-                <div><label className="block text-xs font-bold text-gray-700 mb-1">Cédula de Identidad</label><input type="text" value={formData.datosPersonales.cedula} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
-                <div><label className="block text-xs font-bold text-gray-700 mb-1">Nombres</label><input type="text" value={formData.datosPersonales.nombres} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
-                <div><label className="block text-xs font-bold text-gray-700 mb-1">Apellidos</label><input type="text" value={formData.datosPersonales.apellidos} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
+                <div><label className="block text-xs font-bold text-gray-700 mb-1">Cédula de Identidad</label><input type="text" value={dp.cedula || ''} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
+                <div><label className="block text-xs font-bold text-gray-700 mb-1">Nombres</label><input type="text" value={dp.nombres || ''} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
+                <div><label className="block text-xs font-bold text-gray-700 mb-1">Apellidos</label><input type="text" value={dp.apellidos || ''} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">RIF <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.rif} onChange={e => handleInputChange('datosPersonales', 'rif', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.nacionalidad} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gaceta} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">RIF <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.rif || ''} onChange={e => handleInputChange('datosPersonales', 'rif', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.nacionalidad || ''} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gaceta || ''} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.lugarNacimiento} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.fechaNacimiento} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.lugarNacimiento || ''} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.fechaNacimiento || ''} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-2">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalc." className="w-full p-2 border rounded bg-gray-100 text-gray-600 text-xs sm:text-sm" value={formData.datosPersonales.edad} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.sexo} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalc." className="w-full p-2 border rounded bg-gray-100 text-gray-600 text-xs sm:text-sm" value={dp.edad || ''} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.sexo || ''} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Grupo Sanguíneo</label>
-                  <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.grupoSanguineo} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
+                  <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.grupoSanguineo || ''} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
                     <option value="">SELECCIONE</option><option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
                   </select>
                 </div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.estadoCivil} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">SELECCIONE</option><option value="SOLTERO">SOLTERO</option><option value="CASADO">CASADO</option><option value="VIUDO">VIUDO</option><option value="DIVORCIADO">DIVORCIADO</option><option value="CONCUBINO">CONCUBINO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.habilidadMotriz} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">SELECCIONE</option><option value="DIESTRO">DIESTRO</option><option value="ZURDO">ZURDO</option><option value="AMBIDIESTRO">AMBIDIESTRO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.licencia} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gradoLicencia} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.estadoCivil || ''} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">SELECCIONE</option><option value="SOLTERO">SOLTERO</option><option value="CASADO">CASADO</option><option value="VIUDO">VIUDO</option><option value="DIVORCIADO">DIVORCIADO</option><option value="CONCUBINO">CONCUBINO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.habilidadMotriz || ''} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">SELECCIONE</option><option value="DIESTRO">DIESTRO</option><option value="ZURDO">ZURDO</option><option value="AMBIDIESTRO">AMBIDIESTRO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.licencia || ''} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={dp.gradoLicencia || ''} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
               </div>
 
-              {/* NUEVOS CAMPOS: UNIDAD DE ADSCRIPCIÓN Y GERENCIA (FAS Movilnet) */}
               <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-6">
                 <h4 className="text-xs font-bold text-blue-900 mb-3 uppercase">Adscripción y Ubicación Corporativa (FAS Movilnet)</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Unidad de Adscripción <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.unidadAdscripcion} onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}><option value="">SELECCIONE</option><option value="PRESIDENCIA">PRESIDENCIA</option><option value="VICEPRESIDENCIA">VICEPRESIDENCIA</option></select></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Gerencia General <Req/></label><input type="text" placeholder="Ej. GG GESTION HUMANA" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gerenciaGeneral} onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Región</label><input type="text" placeholder="Ej. CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.region} onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado de Trabajo</label><input type="text" placeholder="Ej. DISTRITO CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.estadoTrabajo} onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Unidad de Adscripción <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.unidadAdscripcion || ''} onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}><option value="">SELECCIONE</option><option value="PRESIDENCIA">PRESIDENCIA</option><option value="VICEPRESIDENCIA">VICEPRESIDENCIA</option></select></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Gerencia General <Req/></label><input type="text" placeholder="Ej. GG GESTION HUMANA" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gerenciaGeneral || ''} onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Región</label><input type="text" placeholder="Ej. CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.region || ''} onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado de Trabajo</label><input type="text" placeholder="Ej. DISTRITO CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.estadoTrabajo || ''} onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)} /></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.tipoVivienda} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.condicionVivienda} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.alergico} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.alergiaDesc} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.tipoVivienda || ''} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.condicionVivienda || ''} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={dp.alergico || ''} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.alergiaDesc || ''} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.profesion} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ocupación Específica</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.ocupacion} onChange={e => handleInputChange('datosPersonales', 'ocupacion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.profesion || ''} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ocupación Específica</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.ocupacion || ''} onChange={e => handleInputChange('datosPersonales', 'ocupacion', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={dp.colegiado || ''} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroColegiado || ''} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded lowercase text-xs sm:text-sm" value={formData.datosPersonales.correo} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tlfMovil} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tlfLocal} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded lowercase text-xs sm:text-sm" value={dp.correo || ''} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfMovil || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfLocal || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
               </div>
 
               <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-100 mt-6 mb-6">
                 <h4 className="text-xs sm:text-sm font-bold text-red-800 mb-3 uppercase">En caso de emergencia comunicarse con</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaNombre1} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaTelefono1} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaNombre2} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={formData.datosPersonales.emergenciaTelefono2} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaNombre1 || ''} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaTelefono1 || ''} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaNombre2 || ''} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaTelefono2 || ''} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.carnetPatria} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.nroCarnetPatria} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={dp.carnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroCarnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
               </div>
 
               <div className="bg-gray-50 p-3 sm:p-4 rounded-lg border mt-6">
                 <h4 className="text-xs sm:text-sm font-bold text-gray-700 mb-3 uppercase">Tallas y Medidas</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-                  <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.estatura} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.peso} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.datosPersonales.tallaCamisa} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.datosPersonales.tallaChemise} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.datosPersonales.tallaFranela} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaBluejean} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaBota} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaZapato} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Casco</label><input type="text" placeholder="Ej. L o 58cm" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.tallaCasco} onChange={e => handleInputChange('datosPersonales', 'tallaCasco', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.estatura || ''} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.peso || ''} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={dp.tallaCamisa || ''} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={dp.tallaChemise || ''} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={dp.tallaFranela || ''} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaBluejean || ''} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaBota || ''} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaZapato || ''} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Casco</label><input type="text" placeholder="Ej. L o 58cm" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaCasco || ''} onChange={e => handleInputChange('datosPersonales', 'tallaCasco', e.target.value)} /></div>
                 </div>
               </div>
             </div>
@@ -636,21 +668,21 @@ const App = () => {
             <div className={activeTab === 1 ? 'block' : 'hidden'}>
               <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dirección de Habitación</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.estado} onChange={e => handleInputChange('direccion', 'estado', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.ciudad} onChange={e => handleInputChange('direccion', 'ciudad', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.municipio} onChange={e => handleInputChange('direccion', 'municipio', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.parroquia} onChange={e => handleInputChange('direccion', 'parroquia', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Urbanización</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.urbanizacion} onChange={e => handleInputChange('direccion', 'urbanizacion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Sector</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.sector} onChange={e => handleInputChange('direccion', 'sector', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Avenida, calle o cruce <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.avenida} onChange={e => handleInputChange('direccion', 'avenida', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Código Postal</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.codigoPostal} onChange={e => handleInputChange('direccion', 'codigoPostal', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.estado || ''} onChange={e => handleInputChange('direccion', 'estado', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.ciudad || ''} onChange={e => handleInputChange('direccion', 'ciudad', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.municipio || ''} onChange={e => handleInputChange('direccion', 'municipio', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.parroquia || ''} onChange={e => handleInputChange('direccion', 'parroquia', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Urbanización</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.urbanizacion || ''} onChange={e => handleInputChange('direccion', 'urbanizacion', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Sector</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.sector || ''} onChange={e => handleInputChange('direccion', 'sector', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Avenida, calle o cruce <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.avenida || ''} onChange={e => handleInputChange('direccion', 'avenida', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Código Postal</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.codigoPostal || ''} onChange={e => handleInputChange('direccion', 'codigoPostal', e.target.value)} /></div>
               </div>
               <div className="bg-gray-50 p-3 sm:p-4 border rounded-lg">
                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase">Identificación del Inmueble</label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div><input type="text" placeholder="Edf./Res./Casa" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.inmueble} onChange={e => handleInputChange('direccion', 'inmueble', e.target.value)} /></div>
-                  <div><input type="text" placeholder="Piso o Nivel" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.piso} onChange={e => handleInputChange('direccion', 'piso', e.target.value)} /></div>
-                  <div><input type="text" placeholder="Apto. o N°" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.direccion.apto} onChange={e => handleInputChange('direccion', 'apto', e.target.value)} /></div>
+                  <div><input type="text" placeholder="Edf./Res./Casa" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.inmueble || ''} onChange={e => handleInputChange('direccion', 'inmueble', e.target.value)} /></div>
+                  <div><input type="text" placeholder="Piso o Nivel" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.piso || ''} onChange={e => handleInputChange('direccion', 'piso', e.target.value)} /></div>
+                  <div><input type="text" placeholder="Apto. o N°" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.apto || ''} onChange={e => handleInputChange('direccion', 'apto', e.target.value)} /></div>
                 </div>
               </div>
             </div>
@@ -664,41 +696,41 @@ const App = () => {
                     <tr><th className="p-3 w-1/4">Nivel</th><th className="p-3 w-1/4">Graduado</th><th className="p-3">Título Obtenido</th></tr>
                   </thead>
                   <tbody>
-                    {formData.educacion.niveles.map((nivel, idx) => (
+                    {(ed.niveles || []).map((nivel, idx) => (
                       <tr key={idx} className="border-b hover:bg-gray-50">
                         <td className="p-3 font-semibold text-gray-700">{nivel.nivel}</td>
-                        <td className="p-3"><select className="w-full p-2 border rounded bg-white text-xs" value={nivel.graduado} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}><option value="">SEL...</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></td>
-                        <td className="p-3"><input type="text" className="w-full p-2 border rounded text-xs" value={nivel.titulo} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'titulo', e.target.value)} /></td>
+                        <td className="p-3"><select className="w-full p-2 border rounded bg-white text-xs" value={nivel.graduado || ''} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}><option value="">SEL...</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></td>
+                        <td className="p-3"><input type="text" className="w-full p-2 border rounded text-xs" value={nivel.titulo || ''} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'titulo', e.target.value)} /></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.educacion.estudiaActualmente} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.horario} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.institucion} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.carrera} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.nivelAlcanzado} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
-                <div className="sm:col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.educacion.traslado} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={ed.estudiaActualmente || ''} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.horario || ''} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.institucion || ''} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.carrera || ''} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.nivelAlcanzado || ''} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
+                <div className="sm:col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.traslado || ''} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 <div>
                   <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Idiomas</h4>
-                  {formData.programasIdiomas.idiomas.map((idioma, idx) => (
+                  {(safeData.programasIdiomas?.idiomas || []).map((idioma, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input type="text" placeholder={`${idx+1}) Indique Idioma`} className="w-1/2 p-2 border rounded text-xs" value={idioma.idioma} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'idioma', e.target.value)} />
-                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelHablado} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelHablado', e.target.value)}><option value="">HABLADO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
-                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelEscrito} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelEscrito', e.target.value)}><option value="">ESCRITO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
+                      <input type="text" placeholder={`${idx+1}) Indique Idioma`} className="w-1/2 p-2 border rounded text-xs" value={idioma.idioma || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'idioma', e.target.value)} />
+                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelHablado || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelHablado', e.target.value)}><option value="">HABLADO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
+                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelEscrito || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelEscrito', e.target.value)}><option value="">ESCRITO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
                     </div>
                   ))}
                 </div>
                 <div>
                   <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Programas Informáticos</h4>
-                  {formData.programasIdiomas.programas.map((prog, idx) => (
+                  {(safeData.programasIdiomas?.programas || []).map((prog, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input type="text" placeholder={`${idx+1}) Señale el Programa`} className="w-2/3 p-2 border rounded text-xs" value={prog.programa} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'programa', e.target.value)} />
-                      <select className="w-1/3 p-2 border rounded bg-white text-xs" value={prog.nivelDominio} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'nivelDominio', e.target.value)}><option value="">NIVEL</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
+                      <input type="text" placeholder={`${idx+1}) Señale el Programa`} className="w-2/3 p-2 border rounded text-xs" value={prog.programa || ''} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'programa', e.target.value)} />
+                      <select className="w-1/3 p-2 border rounded bg-white text-xs" value={prog.nivelDominio || ''} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'nivelDominio', e.target.value)}><option value="">NIVEL</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
                     </div>
                   ))}
                 </div>
@@ -727,14 +759,14 @@ const App = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {formData.actividadesFamilia.dependientes.map((dep, idx) => (
+                    {(fs.dependientes || []).map((dep, idx) => (
                       <tr key={idx} className="border-b hover:bg-gray-50">
-                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.nombres} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
-                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.cedula} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
-                        <td className="p-1"><input type="date" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
-                        <td className="p-1"><input type="number" readOnly placeholder="Auto." className="w-full p-1.5 border rounded bg-gray-100 text-gray-600 text-xs" value={dep.edad} /></td>
+                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.nombres || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
+                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.cedula || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
+                        <td className="p-1"><input type="date" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
+                        <td className="p-1"><input type="number" readOnly placeholder="Auto." className="w-full p-1.5 border rounded bg-gray-100 text-gray-600 text-xs" value={dep.edad || ''} /></td>
                         <td className="p-1">
-                          <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.parentesco} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)}>
+                          <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.parentesco || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)}>
                             <option value="">SELECCIONE</option>
                             <option value="CÓNYUGE">CÓNYUGE</option>
                             <option value="PADRE">PADRE</option>
@@ -750,7 +782,7 @@ const App = () => {
                             type="text" 
                             placeholder={(dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') ? 'OBLIGATORIO CONAPDIS' : 'Opcional'} 
                             className={`w-full p-1.5 border rounded text-xs ${(dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') && !dep.discapacidad ? 'border-red-500 bg-red-50' : ''}`} 
-                            value={dep.discapacidad} 
+                            value={dep.discapacidad || ''} 
                             onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'discapacidad', e.target.value)} 
                           />
                         </td>
@@ -765,40 +797,40 @@ const App = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    ¿Posee discapacidad? <Req/> {formData.actividadesFamilia.discapacidadPropia === 'SÍ' && <Req/>} / Especifique
+                    ¿Posee discapacidad? <Req/> {fs.discapacidadPropia === 'SÍ' && <Req/>} / Especifique
                   </label>
                   <div className="flex gap-2">
-                    <select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={formData.actividadesFamilia.discapacidadPropia} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}>
+                    <select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={fs.discapacidadPropia || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}>
                       <option value="">NO/SÍ</option>
                       <option value="SÍ">SÍ</option>
                       <option value="NO">NO</option>
                     </select>
                     <input 
                       type="text" 
-                      placeholder={formData.actividadesFamilia.discapacidadPropia === 'SÍ' ? 'Obligatorio' : 'Especifique'} 
-                      className={`w-2/3 sm:w-3/4 p-2 border rounded text-xs ${formData.actividadesFamilia.discapacidadPropia === 'SÍ' && !formData.actividadesFamilia.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} 
-                      value={formData.actividadesFamilia.discapacidadDesc} 
+                      placeholder={fs.discapacidadPropia === 'SÍ' ? 'Obligatorio' : 'Especifique'} 
+                      className={`w-2/3 sm:w-3/4 p-2 border rounded text-xs ${fs.discapacidadPropia === 'SÍ' && !fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} 
+                      value={fs.discapacidadDesc || ''} 
                       onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} 
                     />
                   </div>
                 </div>
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Indique el N° de Carnet CONAPDIS {formData.actividadesFamilia.discapacidadPropia === 'SÍ' && <Req/>}
+                    Indique el N° de Carnet CONAPDIS {fs.discapacidadPropia === 'SÍ' && <Req/>}
                   </label>
                   <input 
                     type="text" 
-                    placeholder={formData.actividadesFamilia.discapacidadPropia === 'SÍ' ? 'Obligatorio CONAPDIS' : 'N° CONAPDIS'} 
-                    className={`w-full p-2 border rounded text-xs sm:text-sm ${formData.actividadesFamilia.discapacidadPropia === 'SÍ' && !formData.actividadesFamilia.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} 
-                    value={formData.actividadesFamilia.carnetConapdis} 
+                    placeholder={fs.discapacidadPropia === 'SÍ' ? 'Obligatorio CONAPDIS' : 'N° CONAPDIS'} 
+                    className={`w-full p-2 border rounded text-xs sm:text-sm ${fs.discapacidadPropia === 'SÍ' && !fs.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} 
+                    value={fs.carnetConapdis || ''} 
                     onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} 
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={formData.actividadesFamilia.tomaMedicamento} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={formData.actividadesFamilia.medicamentoCual} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.actividadesFamilia.medicamentoMotivo} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={fs.tomaMedicamento || ''} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={fs.medicamentoCual || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={fs.medicamentoMotivo || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
               </div>
             </div>
 
@@ -809,43 +841,43 @@ const App = () => {
                 <button type="button" onClick={() => addRow('experiencia', 'adminPublica', { organismo: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1.5 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
               </div>
               <p className="text-xs text-gray-500 mb-3 border-b pb-2">Comenzando por el último o actual</p>
-              {formData.experiencia.adminPublica.map((exp, idx) => (
+              {(exp.adminPublica || []).map((ex, idx) => (
                 <div key={idx} className="bg-gray-50 p-3 sm:p-4 border rounded-lg mb-4 relative">
                   <button type="button" onClick={() => removeRow('experiencia', 'adminPublica', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 size={16} /></button>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-2">
-                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Organismo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.organismo} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'organismo', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.direccion} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'direccion', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.telefono} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'telefono', e.target.value)} /></div>
+                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Organismo</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.organismo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'organismo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.direccion || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'direccion', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.telefono || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'telefono', e.target.value)} /></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.cargo} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'cargo', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.ingreso} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'ingreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.egreso} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'egreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.motivo} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'motivo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.cargo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'cargo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.ingreso || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'ingreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.egreso || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'egreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.motivo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'motivo', e.target.value)} /></div>
                   </div>
                 </div>
               ))}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={formData.experiencia.esJubilado} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded text-xs" value={formData.experiencia.jubiladoDesc} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={formData.experiencia.enProcesoJubilacion} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded text-xs" value={formData.experiencia.procesoJubilacionDesc} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={exp.esJubilado || ''} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded text-xs" value={exp.jubiladoDesc || ''} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={exp.enProcesoJubilacion || ''} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded text-xs" value={exp.procesoJubilacionDesc || ''} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Empresa Privada</h3>
                 <button type="button" onClick={() => addRow('experiencia', 'empresaPrivada', { empresa: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' })} className="text-xs bg-gray-200 px-3 py-1.5 rounded hover:bg-gray-300 flex items-center font-bold"><Plus size={14} className="mr-1"/> Añadir</button>
               </div>
-              {formData.experiencia.empresaPrivada.map((exp, idx) => (
+              {(exp.empresaPrivada || []).map((ex, idx) => (
                 <div key={idx} className="bg-gray-50 p-3 sm:p-4 border rounded-lg mb-4 relative">
                   <button type="button" onClick={() => removeRow('experiencia', 'empresaPrivada', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 size={16} /></button>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-2">
-                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Empresa</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.empresa} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'empresa', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.direccion} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'direccion', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.telefono} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'telefono', e.target.value)} /></div>
+                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Empresa</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.empresa || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'empresa', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.direccion || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'direccion', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.telefono || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'telefono', e.target.value)} /></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.cargo} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'cargo', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.ingreso} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'ingreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={exp.egreso} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'egreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" className="w-full p-2 border rounded text-xs" value={exp.motivo} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'motivo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.cargo || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'cargo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.ingreso || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'ingreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.egreso || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'egreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.motivo || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'motivo', e.target.value)} /></div>
                   </div>
                 </div>
               ))}
@@ -863,14 +895,14 @@ const App = () => {
                 <label className="block text-xs font-bold text-blue-900 mb-2 uppercase">¿Posee algún familiar trabajando en Telecomunicaciones Movilnet C.A.? <Req/></label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.hcmPolizas.familiarMovilnet} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnet', e.target.value)}>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={hcm.familiarMovilnet || 'NO'} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnet', e.target.value)}>
                       <option value="NO">NO</option>
                       <option value="SÍ">SÍ</option>
                     </select>
                   </div>
-                  {formData.hcmPolizas.familiarMovilnet === 'SÍ' && (
+                  {hcm.familiarMovilnet === 'SÍ' && (
                     <div>
-                      <input type="text" placeholder="Indique el Parentesco y Nombres" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.hcmPolizas.familiarMovilnetParentesco} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnetParentesco', e.target.value)} required />
+                      <input type="text" placeholder="Indique el Parentesco y Nombres" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={hcm.familiarMovilnetParentesco || ''} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnetParentesco', e.target.value)} required />
                     </div>
                   )}
                 </div>
@@ -880,25 +912,25 @@ const App = () => {
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="text-sm font-bold text-gray-800 uppercase">¿Mantiene otro Seguro o Fondo de Salud vigente?</h4>
-                  <select className="p-1.5 border rounded bg-white text-xs font-bold" value={formData.hcmPolizas.tieneOtroSeguro} onChange={e => handleInputChange('hcmPolizas', 'tieneOtroSeguro', e.target.value)}>
+                  <select className="p-1.5 border rounded bg-white text-xs font-bold" value={hcm.tieneOtroSeguro || 'NO'} onChange={e => handleInputChange('hcmPolizas', 'tieneOtroSeguro', e.target.value)}>
                     <option value="NO">NO</option>
                     <option value="SÍ">SÍ</option>
                   </select>
                 </div>
 
-                {formData.hcmPolizas.tieneOtroSeguro === 'SÍ' && (
+                {hcm.tieneOtroSeguro === 'SÍ' && (
                   <div className="border rounded-lg p-4 bg-gray-50 mb-4">
                     <div className="flex justify-between items-center mb-3">
                       <span className="text-xs font-bold text-gray-700">Pólizas / Fondos Activos</span>
                       <button type="button" onClick={() => addRow('hcmPolizas', 'segurosVigentes', { empresaSeguros: '', nroPoliza: '', sumaAseguradora: '', deducible: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded font-bold hover:bg-blue-200 flex items-center"><Plus size={14} className="mr-1"/> Agregar Póliza</button>
                     </div>
-                    {formData.hcmPolizas.segurosVigentes.map((seg, idx) => (
+                    {(hcm.segurosVigentes || []).map((seg, idx) => (
                       <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2 relative bg-white p-3 border rounded">
-                        <div><label className="block text-[10px] text-gray-500">Empresa de Seguros</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.empresaSeguros} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'empresaSeguros', e.target.value)} /></div>
-                        <div><label className="block text-[10px] text-gray-500">N° de Póliza o Fondo</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.nroPoliza} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'nroPoliza', e.target.value)} /></div>
-                        <div><label className="block text-[10px] text-gray-500">Suma Aseguradora</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.sumaAseguradora} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'sumaAseguradora', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">Empresa de Seguros</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.empresaSeguros || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'empresaSeguros', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">N° de Póliza o Fondo</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.nroPoliza || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'nroPoliza', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">Suma Aseguradora</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.sumaAseguradora || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'sumaAseguradora', e.target.value)} /></div>
                         <div className="flex gap-2 items-end">
-                          <div className="flex-1"><label className="block text-[10px] text-gray-500">Deducible</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.deducible} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'deducible', e.target.value)} /></div>
+                          <div className="flex-1"><label className="block text-[10px] text-gray-500">Deducible</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.deducible || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'deducible', e.target.value)} /></div>
                           <button type="button" onClick={() => removeRow('hcmPolizas', 'segurosVigentes', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded h-8"><Trash2 size={16}/></button>
                         </div>
                       </div>
@@ -926,13 +958,13 @@ const App = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {formData.hcmPolizas.beneficiariosFallecimiento.map((ben, idx) => (
+                      {(hcm.beneficiariosFallecimiento || []).map((ben, idx) => (
                         <tr key={idx} className="border-b hover:bg-gray-50">
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.nombres} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'nombres', e.target.value)} /></td>
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.cedula} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'cedula', e.target.value)} /></td>
-                          <td className="p-1"><select className="w-full p-1.5 border rounded bg-white text-xs" value={ben.sexo} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></td>
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs uppercase" value={ben.parentesco} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'parentesco', e.target.value)} /></td>
-                          <td className="p-1"><input type="number" placeholder="Ej. 100" className="w-full p-1.5 border rounded text-xs" value={ben.porcentaje} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'porcentaje', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.nombres || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'nombres', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.cedula || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'cedula', e.target.value)} /></td>
+                          <td className="p-1"><select className="w-full p-1.5 border rounded bg-white text-xs" value={ben.sexo || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></td>
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs uppercase" value={ben.parentesco || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'parentesco', e.target.value)} /></td>
+                          <td className="p-1"><input type="number" placeholder="Ej. 100" className="w-full p-1.5 border rounded text-xs" value={ben.porcentaje || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'porcentaje', e.target.value)} /></td>
                           <td className="p-1 text-center"><button type="button" onClick={() => removeRow('hcmPolizas', 'beneficiariosFallecimiento', idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded"><Trash2 size={14} /></button></td>
                         </tr>
                       ))}
