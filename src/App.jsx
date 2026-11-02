@@ -87,6 +87,30 @@ const App = () => {
 
   const tabs = ["1. Datos Personales", "2. Dirección", "3. Educación e Idiomas", "4. Carga Familiar", "5. Experiencia", "6. HCM y Pólizas"];
 
+  // ================= ALGORITMO RIF (MÓDULO 11) =================
+  const calcularRifAutomatico = (nacionalidad, cedula) => {
+    if (!cedula) return '';
+    const numerosLimpios = cedula.replace(/\D/g, '');
+    if (numerosLimpios.length === 0) return '';
+
+    const letraInicial = (nacionalidad || 'V').toUpperCase();
+    const numerosCentrales = numerosLimpios.padStart(8, '0').slice(-8);
+
+    const valoresLetras = { 'V': 4, 'E': 8, 'J': 12, 'P': 16, 'G': 20 };
+    let sumaTotal = valoresLetras[letraInicial] || 4;
+
+    const factores = [3, 2, 7, 6, 5, 4, 3, 2];
+    for (let i = 0; i < 8; i++) {
+      sumaTotal += parseInt(numerosCentrales[i], 10) * factores[i];
+    }
+
+    const residuo = sumaTotal % 11;
+    const resta = 11 - residuo;
+    const digitoVerificador = (resta === 10 || resta === 11) ? 0 : resta;
+
+    return `${letraInicial}-${numerosCentrales}-${digitoVerificador}`;
+  };
+
   // ================= FUNCIONES =================
   const convertDataToUppercase = (data) => {
     if (typeof data !== 'object' || data === null) return data;
@@ -122,7 +146,18 @@ const App = () => {
     setFormData(prev => {
       const targetSection = prev[section] || {};
       const newData = { ...prev, [section]: { ...targetSection, [field]: finalValue } };
-      if (section === 'datosPersonales' && field === 'fechaNacimiento') newData.datosPersonales.edad = calcularEdad(finalValue);
+      
+      if (section === 'datosPersonales') {
+        if (field === 'fechaNacimiento') {
+          newData.datosPersonales.edad = calcularEdad(finalValue);
+        }
+        // Si cambia la nacionalidad o la cédula, recalculamos el RIF automáticamente
+        if (field === 'nacionalidad' || field === 'cedula') {
+          const nac = field === 'nacionalidad' ? finalValue : newData.datosPersonales.nacionalidad;
+          const ced = field === 'cedula' ? finalValue : newData.datosPersonales.cedula;
+          newData.datosPersonales.rif = calcularRifAutomatico(nac, ced);
+        }
+      }
       return newData;
     });
     setValidationErrors([]); 
@@ -389,13 +424,18 @@ const App = () => {
       setMaxUnlockedTab(unlocked);
       setActiveTab(unlocked);
     } else {
+      const ced = (data.cedula || '').toUpperCase();
+      const nac = 'V';
+      const rifAuto = calcularRifAutomatico(nac, ced);
       setFormData(prev => ({ 
         ...prev, 
         datosPersonales: { 
           ...prev.datosPersonales, 
           nombres: (data.nombres || '').toUpperCase(), 
           apellidos: (data.apellidos || '').toUpperCase(), 
-          cedula: (data.cedula || '').toUpperCase() 
+          cedula: ced,
+          nacionalidad: nac,
+          rif: rifAuto
         } 
       }));
       setMaxUnlockedTab(0);
@@ -612,7 +652,10 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">RIF <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.rif || ''} onChange={e => handleInputChange('datosPersonales', 'rif', e.target.value)} /></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">RIF (Calculado Automáticamente) <Req/></label>
+                  <input type="text" className="w-full p-2 border rounded bg-gray-100 text-gray-800 font-bold text-xs sm:text-sm" value={dp.rif || ''} readOnly title="Calculado automáticamente por módulo 11" />
+                </div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.nacionalidad || ''} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
                 <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gaceta || ''} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
               </div>
