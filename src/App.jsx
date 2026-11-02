@@ -196,8 +196,6 @@ const App = () => {
   };
 
   // ================= MANEJADORES DE ACCESO =================
-  
-  // 1. Ingreso Habitual con Cédula y Clave
   const handleLoginClave = async (e) => {
     e.preventDefault();
     setLoginError(null);
@@ -223,7 +221,6 @@ const App = () => {
     }
   };
 
-  // 2. Paso 1 del Primer Ingreso: Verificar P00 + Cédula + Fecha Nacimiento
   const handleVerifySap = async (e) => {
     e.preventDefault();
     setLoginError(null);
@@ -240,8 +237,6 @@ const App = () => {
       });
       
       if (response.ok) {
-        const data = await response.json();
-        // Si ya tenía clave pero está usando el flujo de primer ingreso, podemos dejarle actualizarla o ingresarlo directo
         setLoginStep('createPassword');
       } else {
         const errData = await response.json();
@@ -254,7 +249,6 @@ const App = () => {
     }
   };
 
-  // 3. Paso 2 del Primer Ingreso: Guardar la nueva Clave
   const handleCreatePassword = async (e) => {
     e.preventDefault();
     setLoginError(null);
@@ -281,7 +275,6 @@ const App = () => {
       });
 
       if (response.ok) {
-        // Realizamos login automático tras crear la clave
         const loginResp = await fetch(`/api/login-clave`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -359,108 +352,110 @@ const App = () => {
             <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
           </div>
 
-          {/* OPCIÓN 1: LOGIN HABITUAL (Cédula + Clave) */}
-          {loginStep === 'login' && (
-            <form onSubmit={handleLoginClave} className="p-8">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                  <input type="text" placeholder="Ej. 12345678" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
+          <>
+            {/* OPCIÓN 1: LOGIN HABITUAL (Cédula + Clave) */}
+            {loginStep === 'login' && (
+              <form onSubmit={handleLoginClave} className="p-8">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
+                    <input type="text" placeholder="Ej. 12345678" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
+                  </div>
                 </div>
-              </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Key className="h-5 w-5 text-gray-400" /></div>
-                  <input type="password" placeholder="Tu clave de acceso" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Key className="h-5 w-5 text-gray-400" /></div>
+                    <input type="password" placeholder="Tu clave de acceso" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
+                  </div>
                 </div>
-              </div>
 
-              {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
-              
-              <button type="submit" disabled={isSearching || !loginCedula || !loginClave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
-                {isSearching ? 'Ingresando...' : <><Search size={18} className="mr-2" /> Ingresar</>}
-              </button>
-
-              <div className="text-center mt-4 border-t pt-4">
-                <button type="button" onClick={() => { setLoginStep('verifyFirst'); setLoginError(null); }} className="text-sm text-blue-600 hover:underline font-medium">
-                  ¿Es tu primer ingreso? Regístrate aquí
+                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+                
+                <button type="submit" disabled={isSearching || !loginCedula || !loginClave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
+                  {isSearching ? 'Ingresando...' : <><Search size={18} className="mr-2" /> Ingresar</>}
                 </button>
-              </div>
-            </form>
-          )}
 
-          {/* OPCIÓN 2: PASO 1 - VALIDACIÓN SAP (P00 + Cédula + Fecha Nacimiento) */}
-          {loginStep === 'verifyFirst' && (
-            <form onSubmit={handleVerifySap} className="p-8">
-              <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Primer Ingreso - Validación SAP</h3>
-              <p className="text-xs text-gray-500 mb-6 text-center">Ingrese sus datos de empleado para autenticar su identidad.</p>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
-                  <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                <div className="text-center mt-4 border-t pt-4">
+                  <button type="button" onClick={() => { setLoginStep('verifyFirst'); setLoginError(null); }} className="text-sm text-blue-600 hover:underline font-medium">
+                    ¿Es tu primer ingreso? Regístrate aquí
+                  </button>
                 </div>
-              </div>
+              </form>
+            )}
 
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                  <input type="text" placeholder="Cédula registrada en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+            {/* OPCIÓN 2: PASO 1 - VALIDACIÓN SAP (P00 + Cédula + Fecha Nacimiento) */}
+            {loginStep === 'verifyFirst' && (
+              <form onSubmit={handleVerifySap} className="p-8">
+                <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Primer Ingreso - Validación SAP</h3>
+                <p className="text-xs text-gray-500 mb-6 text-center">Ingrese sus datos de empleado para autenticar su identidad.</p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
+                    <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                  </div>
                 </div>
-              </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
-                  <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
+                    <input type="text" placeholder="Cédula registrada en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+                  </div>
                 </div>
-              </div>
 
-              {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
-              
-              <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaNacimientoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
-                {isSearching ? 'Verificando...' : 'Verificar y Continuar'}
-              </button>
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
+                    <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
+                  </div>
+                </div>
 
-              <div className="text-center mt-2">
-                <button type="button" onClick={() => { setLoginStep('login'); setLoginError(null); }} className="text-sm text-gray-600 hover:underline">
-                  ← Volver al inicio de sesión
+                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+                
+                <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaNacimientoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
+                  {isSearching ? 'Verificando...' : 'Verificar y Continuar'}
                 </button>
-              </div>
-            </form>
-          )}
 
-          {/* OPCIÓN 3: PASO 2 - CREAR CLAVE PERSONAL */}
-          {loginStep === 'createPassword' && (
-            <form onSubmit={handleCreatePassword} className="p-8">
-              <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Crea tu Clave Personal</h3>
-              <p className="text-xs text-gray-500 mb-6 text-center">Esta clave te servirá para ingresar en tus próximas visitas sin necesidad de validar tus datos de SAP.</p>
-              
-              <div className="mb-4">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
-                <input type="password" placeholder="Mínimo 4 caracteres" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
-              </div>
+                <div className="text-center mt-2">
+                  <button type="button" onClick={() => { setLoginStep('login'); setLoginError(null); }} className="text-sm text-gray-600 hover:underline">
+                    ← Volver al inicio de sesión
+                  </button>
+                </div>
+              </form>
+            )}
 
-              <div className="mb-6">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
-                <input type="password" placeholder="Repite tu clave" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-              </div>
+            {/* OPCIÓN 3: PASO 2 - CREAR CLAVE PERSONAL */}
+            {loginStep === 'createPassword' && (
+              <form onSubmit={handleCreatePassword} className="p-8">
+                <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Crea tu Clave Personal</h3>
+                <p className="text-xs text-gray-500 mb-6 text-center">Esta clave te servirá para ingresar en tus próximas visitas sin necesidad de validar tus datos de SAP.</p>
+                
+                <div className="mb-4">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
+                  <input type="password" placeholder="Mínimo 4 caracteres" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                </div>
 
-              {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
-              
-              <button type="submit" disabled={isSearching || !newPassword || !confirmPassword} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
-                {isSearching ? 'Guardando...' : 'Guardar Clave y Entrar'}
-              </button>
-            </form>
-          )}
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
+                  <input type="password" placeholder="Repite tu clave" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                </div>
+
+                {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+                
+                <button type="submit" disabled={isSearching || !newPassword || !confirmPassword} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
+                  {isSearching ? 'Guardando...' : 'Guardar Clave y Entrar'}
+                </button>
+              </form>
+            )}
+          </>
 
         </div>
       </div>
@@ -485,18 +480,20 @@ const App = () => {
       </header>
 
       <main className="max-w-6xl mx-auto mt-6 px-4">
-        {submitStatus === 'success' && (
-          <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded flex items-start shadow-sm">
-            <CheckCircle className="text-green-500 mr-3 mt-0.5" />
-            <div><h3 className="text-green-800 font-bold">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-sm mt-1">La información ha sido completada y registrada de forma definitiva.</p></div>
-          </div>
-        )}
-        {submitStatus === 'draft' && (
-          <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-start shadow-sm">
-            <Save className="text-blue-500 mr-3 mt-0.5" />
-            <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su cédula y clave, continuará exactamente donde lo dejó.</p></div>
-          </div>
-        )}
+        <>
+          {submitStatus === 'success' && (
+            <div className="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded flex items-start shadow-sm">
+              <CheckCircle className="text-green-500 mr-3 mt-0.5" />
+              <div><h3 className="text-green-800 font-bold">¡Datos guardados exitosamente!</h3><p className="text-green-700 text-sm mt-1">La información ha sido completada y registrada de forma definitiva.</p></div>
+            </div>
+          )}
+          {submitStatus === 'draft' && (
+            <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-start shadow-sm">
+              <Save className="text-blue-500 mr-3 mt-0.5" />
+              <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su cédula y clave, continuará exactamente donde lo dejó.</p></div>
+            </div>
+          )}
+        </>
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           
@@ -776,7 +773,7 @@ const App = () => {
                   {activeTab < tabs.length - 1 ? (
                     <button type="button" onClick={handleNext} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center justify-center transition-colors">Siguiente <ChevronRight size={18} className="ml-1" /></button>
                   ) : (
-                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</></button>
+                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}</button>
                   )}
                 </div>
               </div>
