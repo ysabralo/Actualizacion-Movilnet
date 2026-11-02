@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText } from 'lucide-react';
 
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
@@ -73,7 +73,15 @@ const App = () => {
       familiarMovilnetParentesco: '',
       tieneOtroSeguro: 'NO',
       segurosVigentes: [{ empresaSeguros: '', nroPoliza: '', sumaAseguradora: '', deducible: '' }],
-      beneficiariosFallecimiento: [{ nombres: '', cedula: '', sexo: '', parentesco: '', porcentaje: '' }]
+      beneficiariosFallecimiento: [{ nombres: '', cedula: '', sexo: '', parentesco: '', porcentaje: '' }],
+      declaracionSalud: {
+        p1: 'NO', p2: 'NO', p3: 'NO', p4: 'NO', p5: 'NO',
+        p6: 'NO', p7: 'NO', p8: 'NO', p9: 'NO', p10: 'NO',
+        p11: 'NO', p12: 'NO', p13: 'NO', p14: 'NO', p15: 'NO',
+        detallesEnfermedades: ''
+      },
+      lugarDeclaracion: '',
+      fechaDeclaracion: ''
     }
   });
 
@@ -118,6 +126,25 @@ const App = () => {
       return newData;
     });
     setValidationErrors([]); 
+  };
+
+  const handleNestedInputChange = (section, subSection, field, value) => {
+    let finalValue = typeof value === 'string' ? value.toUpperCase() : value;
+    setFormData(prev => {
+      const targetSection = prev[section] || {};
+      const subTarget = targetSection[subSection] || {};
+      return {
+        ...prev,
+        [section]: {
+          ...targetSection,
+          [subSection]: {
+            ...subTarget,
+            [field]: finalValue
+          }
+        }
+      };
+    });
+    setValidationErrors([]);
   };
 
   const handlePhoneChange = (section, field, value) => {
@@ -211,6 +238,8 @@ const App = () => {
       if (hcm.familiarMovilnet === 'SÍ' && !hcm.familiarMovilnetParentesco) {
         errors.push("Indique el parentesco del familiar en Movilnet");
       }
+      if (!hcm.lugarDeclaracion) errors.push("Lugar de declaración de salud");
+      if (!hcm.fechaDeclaracion) errors.push("Fecha de declaración de salud");
     }
     return errors;
   };
@@ -332,14 +361,16 @@ const App = () => {
   const processSuccessfulLogin = (data) => {
     if (data.datos_previos) {
       const rawData = data.datos_previos;
-      // Blindaje: Si el registro guardado no tiene hcmPolizas, lo inicializamos para evitar crash en blanco
       if (!rawData.hcmPolizas) {
         rawData.hcmPolizas = {
           familiarMovilnet: 'NO',
           familiarMovilnetParentesco: '',
           tieneOtroSeguro: 'NO',
           segurosVigentes: [],
-          beneficiariosFallecimiento: []
+          beneficiariosFallecimiento: [],
+          declaracionSalud: { p1: 'NO', p2: 'NO', p3: 'NO', p4: 'NO', p5: 'NO', p6: 'NO', p7: 'NO', p8: 'NO', p9: 'NO', p10: 'NO', p11: 'NO', p12: 'NO', p13: 'NO', p14: 'NO', p15: 'NO', detallesEnfermedades: '' },
+          lugarDeclaracion: '',
+          fechaDeclaracion: ''
         };
       }
       const formattedData = convertDataToUppercase(rawData);
@@ -402,6 +433,7 @@ const App = () => {
   const fs = safeData.actividadesFamilia || {};
   const exp = safeData.experiencia || {};
   const hcm = safeData.hcmPolizas || {};
+  const declSalud = hcm.declaracionSalud || {};
 
   // ================= PANTALLAS DE ACCESO (RESPONSIVE) =================
   if (!isAuthenticated) {
@@ -888,7 +920,7 @@ const App = () => {
               <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 border-b pb-2 flex items-center gap-2">
                 <ShieldPlus className="text-blue-600" size={20} /> Fondo Administrado de Salud (HCM) y Pólizas
               </h3>
-              <p className="text-xs text-gray-500 mb-6">Información institucional complementaria para la afiliación al fondo de salud de Movilnet[cite: 1, 2].</p>
+              <p className="text-xs text-gray-500 mb-6">Información institucional complementaria para la afiliación al fondo de salud de Movilnet[cite: 5, 6].</p>
 
               {/* Pregunta familiar en Movilnet */}
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
@@ -940,7 +972,7 @@ const App = () => {
               </div>
 
               {/* Beneficiarios en caso de Fallecimiento */}
-              <div>
+              <div className="mb-8">
                 <div className="flex justify-between items-center mb-3 border-b pb-2">
                   <h4 className="text-sm font-bold text-gray-800 uppercase">Beneficiarios en Caso de Fallecimiento</h4>
                   <button type="button" onClick={() => addRow('hcmPolizas', 'beneficiariosFallecimiento', { nombres: '', cedula: '', sexo: '', parentesco: '', porcentaje: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded font-bold hover:bg-blue-200 flex items-center"><Plus size={14} className="mr-1"/> Añadir Beneficiario</button>
@@ -970,6 +1002,91 @@ const App = () => {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              {/* DECLARACIÓN DE SALUD (15 Puntos Oficiales Movilnet) */}
+              <div className="mb-8 border rounded-lg p-4 bg-gray-50">
+                <h4 className="text-sm font-bold text-gray-800 mb-1 uppercase flex items-center gap-2">
+                  <FileText className="text-blue-600" size={18} /> Declaración de Salud
+                </h4>
+                <p className="text-xs text-gray-600 mb-4 italic">
+                  "Indique si alguien de su grupo familiar padece o ha padecido alguna de las siguientes enfermedades incluyendo trabajador, subrayar en caso de ser afirmativo"[cite: 6].
+                </p>
+
+                <div className="space-y-3 text-xs">
+                  {[
+                    { id: 'p1', label: '1. Enfermedades de la Piel (Dermatitis, Acné, Vitiligo, Manchas, Verrugas), Ojos (Cataratas), Oídos (Otitis), Nariz y Garganta (Sinusitis, Amigdalitis, Rinitis) o Respiratorias (Asma, Bronquitis, Neumonía).' },
+                    { id: 'p2', label: '2. Enfermedades Cardiovasculares (Hipertensión Arterial, Infarto, Angina de pecho, Arritmias, Tromboflebitis).' },
+                    { id: 'p3', label: '3. Cefaleas, desmayos, epilepsia, convulsiones, parálisis, retardo mental, trastorno mental, neuropatía, vértigos u otra afección del cerebro o sistema nervioso.' },
+                    { id: 'p4', label: '4. Enfermedades Digestivas (Gastritis, Úlcera Péptica, Afecciones Hepáticas, Cálculos Vesiculares, Hemorroides, Páncreas, Colon).' },
+                    { id: 'p5', label: '5. Enfermedades del Tracto Genito-Urinario (Infecciones en orina, cálculos renales, vejiga o próstata).' },
+                    { id: 'p6', label: '6. Enfermedades de Transmisión Sexual, Infecciosas (Tuberculosis, Hepatitis, Meningitis, VPH, VIH/SIDA) o Parasitarias (Paludismo, Chagas, Amibiasis).' },
+                    { id: 'p7', label: '7. Enfermedades del Aparato Osteomuscular (Neuritis, Ciática, Gota, Reumatismo, Hernias Discales, Artritis, Fracturas, Esguinces).' },
+                    { id: 'p8', label: '8. Enfermedades del Sistema Endocrino (Diabetes, Obesidad, Bocio, Tiroides, Alteraciones del Colesterol, Triglicéridos).' },
+                    { id: 'p9', label: '9. Ganglios linfáticos inflamados, Quistes, Tumores, Cáncer, Enfermedades hematológicas (Leucemia, Lepra, Herpes).' },
+                    { id: 'p10', label: '10. Defectos físicos, anomalías o enfermedad congénita o adquirida. Trastornos del desarrollo psíquico y somático.' },
+                    { id: 'p11', label: '11. ¿Alguna de las personas a ser incluidas consume alcohol, tabaco o cualquier otra droga adictiva?' },
+                    { id: 'p12', label: '12. ¿Alguna de las personas ha tenido cambios de peso, ha sido donante/receptor de órganos o recibido transfusiones sanguíneas en los últimos 2 años?' },
+                    { id: 'p13', label: '13. ¿Alguna de las personas a ser incluidas ha sido paciente de algún Hospital, Clínica o Sanatorio?' },
+                    { id: 'p14', label: '14. ¿Alguna de las personas a ser incluidas se ha practicado algún chequeo, consulta médica por enfermedad o cirugía en los últimos cinco (5) años?' },
+                    { id: 'p15', label: '15. ¿Tiene alguna otra condición o antecedente médico relevante no especificado?' }
+                  ].map((item) => (
+                    <div key={item.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-2.5 rounded border gap-2">
+                      <span className="text-gray-800 font-medium flex-1">{item.label}</span>
+                      <select 
+                        className="p-1 border rounded bg-white font-bold text-xs w-24"
+                        value={declSalud[item.id] || 'NO'}
+                        onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', item.id, e.target.value)}
+                      >
+                        <option value="NO">NO</option>
+                        <option value="SÍ">SÍ</option>
+                      </select>
+                    </div>
+                  ))}
+
+                  <div className="mt-4">
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Si marcó SÍ en alguna de las opciones anteriores, detalle a continuación la persona, enfermedad y observaciones:</label>
+                    <textarea 
+                      className="w-full p-2 border rounded text-xs bg-white" 
+                      rows="3"
+                      placeholder="Describa los detalles médicos..."
+                      value={declSalud.detallesEnfermedades || ''}
+                      onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', 'detallesEnfermedades', e.target.value)}
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+
+              {/* DECLARACIONES / LUGAR / FECHA / FIRMA */}
+              <div className="bg-blue-50/70 p-4 rounded-lg border border-blue-200">
+                <h4 className="text-xs font-bold text-blue-900 mb-2 uppercase">Declaración de Veracidad y Cierre</h4>
+                <p className="text-xs text-gray-700 mb-4 text-justify">
+                  "Yo declaro la exactitud y veracidad de toda la información arriba expresada y que nada he omitido, ocultando o disimulando, y estoy enterado que las falsedades y reticencias de mala fe por mi parte, podrían ir en contra del beneficio que ofrece el Fondo Administrado al cual pertenezco."[cite: 6]
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Lugar <Req/></label>
+                    <input 
+                      type="text" 
+                      placeholder="Ej. CARACAS" 
+                      className="w-full p-2 border rounded text-xs bg-white uppercase"
+                      value={hcm.lugarDeclaracion || ''}
+                      onChange={e => handleInputChange('hcmPolizas', 'lugarDeclaracion', e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Fecha <Req/></label>
+                    <input 
+                      type="date" 
+                      className="w-full p-2 border rounded text-xs bg-white"
+                      value={hcm.fechaDeclaracion || ''}
+                      onChange={e => handleInputChange('hcmPolizas', 'fechaDeclaracion', e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
 
