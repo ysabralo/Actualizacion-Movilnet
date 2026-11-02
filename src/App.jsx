@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
-import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key } from 'lucide-react';
 
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loginStep, setLoginStep] = useState('login'); // 'login' | 'verifyFirst' | 'createPassword'
+  
+  // Campos de Login Habitual (Cédula + Clave)
+  const [loginCedula, setLoginCedula] = useState('');
+  const [loginClave, setLoginClave] = useState('');
+  
+  // Campos de Primer Ingreso (P00 + Cédula + Fecha Nacimiento)
   const [p00Input, setP00Input] = useState('');
   const [cedulaInput, setCedulaInput] = useState('');
-  const [fechaIngresoInput, setFechaIngresoInput] = useState('');
+  const [fechaNacimientoInput, setFechaNacimientoInput] = useState('');
+  
+  // Campos para crear clave nueva
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
   const [isSearching, setIsSearching] = useState(false);
   const [loginError, setLoginError] = useState(null);
 
@@ -60,16 +72,13 @@ const App = () => {
   const tabs = ["1. Datos Personales", "2. Dirección", "3. Educación e Idiomas", "4. Familia y Salud", "5. Experiencia"];
 
   // ================= FUNCIONES =================
-  
-  // Convertidor recursivo para estandarizar borradores viejos a MAYÚSCULAS
   const convertDataToUppercase = (data) => {
     if (typeof data !== 'object' || data === null) return data;
     if (Array.isArray(data)) return data.map(convertDataToUppercase);
-    
     const newData = {};
     for (const key in data) {
       if (key === 'correo' && typeof data[key] === 'string') {
-        newData[key] = data[key].toLowerCase(); // El correo siempre en minúscula
+        newData[key] = data[key].toLowerCase();
       } else if (typeof data[key] === 'string') {
         newData[key] = data[key].toUpperCase();
       } else {
@@ -94,7 +103,6 @@ const App = () => {
     if (typeof value === 'string') {
       finalValue = field === 'correo' ? value.toLowerCase() : value.toUpperCase();
     }
-
     setFormData(prev => {
       const newData = { ...prev, [section]: { ...prev[section], [field]: finalValue } };
       if (section === 'datosPersonales' && field === 'fechaNacimiento') newData.datosPersonales.edad = calcularEdad(finalValue);
@@ -106,18 +114,12 @@ const App = () => {
   const handlePhoneChange = (section, field, value) => {
     const cleaned = value.replace(/\D/g, ''); 
     let formatted = cleaned;
-    if (cleaned.length > 4) {
-      formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 11)}`;
-    }
+    if (cleaned.length > 4) formatted = `${cleaned.slice(0, 4)}-${cleaned.slice(4, 11)}`;
     handleInputChange(section, field, formatted);
   };
 
   const handleArrayChange = (section, arrayName, index, field, value) => {
-    let finalValue = value;
-    if (typeof value === 'string') {
-      finalValue = value.toUpperCase();
-    }
-
+    let finalValue = typeof value === 'string' ? value.toUpperCase() : value;
     setFormData(prev => {
       const newArray = [...prev[section][arrayName]];
       newArray[index] = { ...newArray[index], [field]: finalValue };
@@ -151,15 +153,11 @@ const App = () => {
       if (!dp.sexo) errors.push("Sexo");
       if (!dp.estadoCivil) errors.push("Estado Civil");
       if (!dp.correo) errors.push("Correo Electrónico");
-      
       if (!dp.tlfMovil || dp.tlfMovil.length < 12) errors.push("Teléfono Móvil (Formato 0XXX-XXXXXXX)");
-      if (dp.tlfLocal && dp.tlfLocal.length > 0 && dp.tlfLocal.length < 12) errors.push("Teléfono Local (Formato incompleto)");
-      
       if (!dp.emergenciaNombre1) errors.push("Nombre Contacto Emergencia 1");
       if (!dp.emergenciaTelefono1 || dp.emergenciaTelefono1.length < 12) errors.push("Teléfono Emergencia 1 (Incompleto)");
       if (!dp.emergenciaNombre2) errors.push("Nombre Contacto Emergencia 2");
       if (!dp.emergenciaTelefono2 || dp.emergenciaTelefono2.length < 12) errors.push("Teléfono Emergencia 2 (Incompleto)");
-
       if (!dp.estatura) errors.push("Estatura");
       if (!dp.peso) errors.push("Peso");
     } else if (tabIndex === 1) {
@@ -197,61 +195,137 @@ const App = () => {
     window.scrollTo(0, 0);
   };
 
-  // ================= SISTEMA DE LOGIN TRIPLE VALIDACIÓN =================
-  const handleLogin = async (e) => {
+  // ================= MANEJADORES DE ACCESO =================
+  
+  // 1. Ingreso Habitual con Cédula y Clave
+  const handleLoginClave = async (e) => {
     e.preventDefault();
     setLoginError(null);
     setIsSearching(true);
     try {
-      const response = await fetch(`/api/login`, {
+      const response = await fetch(`/api/login-clave`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cedula: loginCedula, clave: loginClave })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        processSuccessfulLogin(data);
+      } else {
+        const errData = await response.json();
+        setLoginError(errData.detail || 'Credenciales incorrectas.');
+      }
+    } catch (error) {
+      setLoginError('Error de conexión con el servidor.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // 2. Paso 1 del Primer Ingreso: Verificar P00 + Cédula + Fecha Nacimiento
+  const handleVerifySap = async (e) => {
+    e.preventDefault();
+    setLoginError(null);
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/verify-sap`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           p00: p00Input,
           cedula: cedulaInput,
-          fecha_ingreso: fechaIngresoInput
+          fecha_nacimiento: fechaNacimientoInput
         })
       });
       
       if (response.ok) {
         const data = await response.json();
-        
-        if (data.datos_previos) {
-          // Convertimos la data previa a mayúsculas por seguridad
-          const formattedData = convertDataToUppercase(data.datos_previos);
-          setFormData(formattedData);
-          
-          let unlocked = 0;
-          for (let i = 0; i <= 4; i++) {
-            if (validateTab(i, formattedData).length === 0) unlocked = i + 1;
-            else break;
-          }
-          if (unlocked > 4) unlocked = 4;
-          setMaxUnlockedTab(unlocked);
-          setActiveTab(unlocked);
-        } else {
-          setFormData(prev => ({ 
-            ...prev, 
-            datosPersonales: { 
-              ...prev.datosPersonales, 
-              nombres: data.nombres.toUpperCase(), 
-              apellidos: data.apellidos.toUpperCase(), 
-              cedula: data.cedula.toUpperCase() 
-            } 
-          }));
-          setMaxUnlockedTab(0);
-          setActiveTab(0);
-        }
-        setIsAuthenticated(true);
+        // Si ya tenía clave pero está usando el flujo de primer ingreso, podemos dejarle actualizarla o ingresarlo directo
+        setLoginStep('createPassword');
       } else {
         const errData = await response.json();
-        setLoginError(errData.detail || 'Error de validación.');
+        setLoginError(errData.detail || 'Error de validación SAP.');
       }
     } catch (error) {
       setLoginError('Error de conexión con la base de datos.');
     } finally {
       setIsSearching(false);
     }
+  };
+
+  // 3. Paso 2 del Primer Ingreso: Guardar la nueva Clave
+  const handleCreatePassword = async (e) => {
+    e.preventDefault();
+    setLoginError(null);
+    
+    if (newPassword.length < 4) {
+      setLoginError('La clave debe tener al menos 4 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setLoginError('Las claves no coinciden.');
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await fetch(`/api/set-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p00: p00Input,
+          cedula: cedulaInput,
+          clave: newPassword
+        })
+      });
+
+      if (response.ok) {
+        // Realizamos login automático tras crear la clave
+        const loginResp = await fetch(`/api/login-clave`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cedula: cedulaInput, clave: newPassword })
+        });
+        const data = await loginResp.json();
+        processSuccessfulLogin(data);
+      } else {
+        const errData = await response.json();
+        setLoginError(errData.detail || 'Error al guardar la clave.');
+      }
+    } catch (error) {
+      setLoginError('Error de conexión.');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const processSuccessfulLogin = (data) => {
+    if (data.datos_previos) {
+      const formattedData = convertDataToUppercase(data.datos_previos);
+      setFormData(formattedData);
+      let unlocked = 0;
+      for (let i = 0; i <= 4; i++) {
+        if (validateTab(i, formattedData).length === 0) unlocked = i + 1;
+        else break;
+      }
+      if (unlocked > 4) unlocked = 4;
+      setMaxUnlockedTab(unlocked);
+      setActiveTab(unlocked);
+    } else {
+      setFormData(prev => ({ 
+        ...prev, 
+        datosPersonales: { 
+          ...prev.datosPersonales, 
+          nombres: data.nombres.toUpperCase(), 
+          apellidos: data.apellidos.toUpperCase(), 
+          cedula: data.cedula.toUpperCase() 
+        } 
+      }));
+      setMaxUnlockedTab(0);
+      setActiveTab(0);
+    }
+    setIsAuthenticated(true);
   };
 
   const handleSaveDraft = async () => {
@@ -275,48 +349,119 @@ const App = () => {
 
   const Req = () => <span className="text-red-500 ml-1" title="Campo obligatorio">*</span>;
 
-  // ================= PANTALLA LOGIN TRIPLE VALIDACIÓN =================
+  // ================= PANTALLAS DE ACCESO =================
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-4">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-6 text-center">
             <h1 className="text-2xl font-bold">Movilnet C.A.</h1>
-            <h2 className="text-sm text-blue-200 mt-1">Validación de Trabajador SAP</h2>
+            <h2 className="text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
           </div>
-          <form onSubmit={handleLogin} className="p-8">
-            <p className="text-sm text-gray-600 mb-6 text-center">Por razones de seguridad, ingrese sus credenciales completas para acceder a su ficha.</p>
-            
-            <div className="mb-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
-                <input type="text" placeholder="Ej. 2XXXXX" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
-              </div>
-            </div>
 
-            <div className="mb-4">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                <input type="text" placeholder="Igual que en la C.I." className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+          {/* OPCIÓN 1: LOGIN HABITUAL (Cédula + Clave) */}
+          {loginStep === 'login' && (
+            <form onSubmit={handleLoginClave} className="p-8">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
+                  <input type="text" placeholder="Ej. 12345678" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
+                </div>
               </div>
-            </div>
 
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Ingreso a la Empresa</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
-                <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700" value={fechaIngresoInput} onChange={(e) => setFechaIngresoInput(e.target.value)} required />
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Key className="h-5 w-5 text-gray-400" /></div>
+                  <input type="password" placeholder="Tu clave de acceso" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
+                </div>
               </div>
-            </div>
 
-            {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
-            
-            <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaIngresoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
-              {isSearching ? 'Validando Credenciales...' : <><Search size={18} className="mr-2" /> Validar y Entrar</>}
-            </button>
-          </form>
+              {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+              
+              <button type="submit" disabled={isSearching || !loginCedula || !loginClave} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
+                {isSearching ? 'Ingresando...' : <><Search size={18} className="mr-2" /> Ingresar</>}
+              </button>
+
+              <div className="text-center mt-4 border-t pt-4">
+                <button type="button" onClick={() => { setLoginStep('verifyFirst'); setLoginError(null); }} className="text-sm text-blue-600 hover:underline font-medium">
+                  ¿Es tu primer ingreso? Regístrate aquí
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* OPCIÓN 2: PASO 1 - VALIDACIÓN SAP (P00 + Cédula + Fecha Nacimiento) */}
+          {loginStep === 'verifyFirst' && (
+            <form onSubmit={handleVerifySap} className="p-8">
+              <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Primer Ingreso - Validación SAP</h3>
+              <p className="text-xs text-gray-500 mb-6 text-center">Ingrese sus datos de empleado para autenticar su identidad.</p>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
+                  <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
+                  <input type="text" placeholder="Cédula registrada en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
+                  <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
+                </div>
+              </div>
+
+              {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+              
+              <button type="submit" disabled={isSearching || !p00Input || !cedulaInput || !fechaNacimientoInput} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors mb-4">
+                {isSearching ? 'Verificando...' : 'Verificar y Continuar'}
+              </button>
+
+              <div className="text-center mt-2">
+                <button type="button" onClick={() => { setLoginStep('login'); setLoginError(null); }} className="text-sm text-gray-600 hover:underline">
+                  ← Volver al inicio de sesión
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* OPCIÓN 3: PASO 2 - CREAR CLAVE PERSONAL */}
+          {loginStep === 'createPassword' && (
+            <form onSubmit={handleCreatePassword} className="p-8">
+              <h3 className="text-lg font-bold text-gray-800 mb-2 text-center">Crea tu Clave Personal</h3>
+              <p className="text-xs text-gray-500 mb-6 text-center">Esta clave te servirá para ingresar en tus próximas visitas sin necesidad de validar tus datos de SAP.</p>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
+                <input type="password" placeholder="Mínimo 4 caracteres" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+              </div>
+
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
+                <input type="password" placeholder="Repite tu clave" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              </div>
+
+              {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
+              
+              <button type="submit" disabled={isSearching || !newPassword || !confirmPassword} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg flex justify-center items-center disabled:opacity-50 transition-colors">
+                {isSearching ? 'Guardando...' : 'Guardar Clave y Entrar'}
+              </button>
+            </form>
+          )}
+
         </div>
       </div>
     );
@@ -332,9 +477,9 @@ const App = () => {
             <h2 className="text-sm text-blue-200 mt-1">Gerencia General de Gestión Humana - Actualización de Oferta de Servicio</h2>
           </div>
           <div className="bg-blue-800 p-3 rounded-lg border border-blue-700 min-w-[250px] relative">
-             <button onClick={() => {setIsAuthenticated(false); setSubmitStatus(null); setP00Input(''); setCedulaInput(''); setFechaIngresoInput(''); setMaxUnlockedTab(0); setActiveTab(0);}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
+             <button onClick={() => {setIsAuthenticated(false); setLoginStep('login'); setSubmitStatus(null); setLoginCedula(''); setLoginClave('');}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
             <p className="text-sm font-semibold uppercase pr-8">{formData.datosPersonales.nombres} {formData.datosPersonales.apellidos}</p>
-            <p className="text-xs text-blue-300">C.I: {formData.datosPersonales.cedula} | {p00Input}</p>
+            <p className="text-xs text-blue-300">C.I: {formData.datosPersonales.cedula}</p>
           </div>
         </div>
       </header>
@@ -349,7 +494,7 @@ const App = () => {
         {submitStatus === 'draft' && (
           <div className="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500 rounded flex items-start shadow-sm">
             <Save className="text-blue-500 mr-3 mt-0.5" />
-            <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con sus credenciales, continuará exactamente donde lo dejó.</p></div>
+            <div><h3 className="text-blue-800 font-bold">¡Borrador guardado exitosamente!</h3><p className="text-blue-700 text-sm mt-1">Puede salir del sistema. Cuando vuelva a ingresar con su cédula y clave, continuará exactamente donde lo dejó.</p></div>
           </div>
         )}
 
@@ -631,7 +776,7 @@ const App = () => {
                   {activeTab < tabs.length - 1 ? (
                     <button type="button" onClick={handleNext} className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center justify-center transition-colors">Siguiente <ChevronRight size={18} className="ml-1" /></button>
                   ) : (
-                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</>}</button>
+                    <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-8 rounded shadow-md transition-colors flex items-center justify-center disabled:opacity-50">{isSubmitting ? 'Guardando...' : <><Save size={18} className="mr-2" /> Finalizar y Guardar</></button>
                   )}
                 </div>
               </div>
