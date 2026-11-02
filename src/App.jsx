@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus } from 'lucide-react';
 
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
@@ -35,7 +35,8 @@ const App = () => {
       nombres: '', apellidos: '', cedula: '', rif: '', lugarNacimiento: '', fechaNacimiento: '', 
       nacionalidad: '', gaceta: '', edad: '', sexo: '', grupoSanguineo: '', estadoCivil: '', habilidadMotriz: '',
       licencia: '', gradoLicencia: '', tipoVivienda: '', condicionVivienda: '', alergico: '', alergiaDesc: '',
-      profesion: '', colegiado: '', nroColegiado: '', correo: '', tlfMovil: '', tlfLocal: '',
+      profesion: '', ocupacion: '', colegiado: '', nroColegiado: '', correo: '', tlfMovil: '', tlfLocal: '',
+      unidadAdscripcion: '', gerenciaGeneral: '', region: '', estadoTrabajo: '',
       emergenciaNombre1: '', emergenciaTelefono1: '', emergenciaNombre2: '', emergenciaTelefono2: '',
       carnetPatria: '', nroCarnetPatria: '', estatura: '', peso: '', tallaCamisa: '',
       tallaChemise: '', tallaFranela: '', tallaBluejean: '', tallaBota: '', tallaZapato: '', tallaCasco: ''
@@ -66,10 +67,17 @@ const App = () => {
       adminPublica: [{ organismo: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' }],
       esJubilado: '', jubiladoDesc: '', enProcesoJubilacion: '', procesoJubilacionDesc: '',
       empresaPrivada: [{ empresa: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' }]
+    },
+    hcmPolizas: {
+      familiarMovilnet: 'NO',
+      familiarMovilnetParentesco: '',
+      tieneOtroSeguro: 'NO',
+      segurosVigentes: [{ empresaSeguros: '', nroPoliza: '', sumaAseguradora: '', deducible: '' }],
+      beneficiariosFallecimiento: [{ nombres: '', cedula: '', sexo: '', parentesco: '', porcentaje: '' }]
     }
   });
 
-  const tabs = ["1. Datos Personales", "2. Dirección", "3. Educación e Idiomas", "4. Familia y Salud", "5. Experiencia"];
+  const tabs = ["1. Datos Personales", "2. Dirección", "3. Educación e Idiomas", "4. Carga Familiar", "5. Experiencia", "6. HCM y Pólizas"];
 
   // ================= FUNCIONES =================
   const convertDataToUppercase = (data) => {
@@ -144,6 +152,7 @@ const App = () => {
     const ed = data.educacion;
     const fs = data.actividadesFamilia;
     const exp = data.experiencia;
+    const hcm = data.hcmPolizas;
 
     if (tabIndex === 0) {
       if (!dp.rif) errors.push("RIF");
@@ -154,6 +163,8 @@ const App = () => {
       if (!dp.estadoCivil) errors.push("Estado Civil");
       if (!dp.correo) errors.push("Correo Electrónico");
       if (!dp.tlfMovil || dp.tlfMovil.length < 12) errors.push("Teléfono Móvil (Formato 0XXX-XXXXXXX)");
+      if (!dp.unidadAdscripcion) errors.push("Unidad de Adscripción");
+      if (!dp.gerenciaGeneral) errors.push("Gerencia General");
       if (!dp.emergenciaNombre1) errors.push("Nombre Contacto Emergencia 1");
       if (!dp.emergenciaTelefono1 || dp.emergenciaTelefono1.length < 12) errors.push("Teléfono Emergencia 1 (Incompleto)");
       if (!dp.emergenciaNombre2) errors.push("Nombre Contacto Emergencia 2");
@@ -177,7 +188,6 @@ const App = () => {
       }
       if (!fs.tomaMedicamento) errors.push("¿Toma medicamento?");
 
-      // Validación condicional para Hijos con Discapacidad en Carga Familiar
       fs.dependientes.forEach((dep, idx) => {
         if ((dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') && !dep.discapacidad) {
           errors.push(`N° Carnet CONAPDIS requerido para el familiar #${idx + 1} (${dep.parentesco})`);
@@ -186,6 +196,13 @@ const App = () => {
     } else if (tabIndex === 4) {
       if (!exp.esJubilado) errors.push("¿Es jubilado?");
       if (!exp.enProcesoJubilacion) errors.push("¿En proceso de jubilación?");
+    } else if (tabIndex === 5) {
+      if (hcm.familiarMovilnet === 'SÍ' && !hcm.familiarMovilnetParentesco) {
+        errors.push("Indique el parentesco del familiar en Movilnet");
+      }
+      if (hcm.tieneOtroSeguro === 'SÍ' && hcm.segurosVigentes.length === 0) {
+        errors.push("Debe registrar al menos un seguro vigente");
+      }
     }
     return errors;
   };
@@ -309,11 +326,11 @@ const App = () => {
       const formattedData = convertDataToUppercase(data.datos_previos);
       setFormData(formattedData);
       let unlocked = 0;
-      for (let i = 0; i <= 4; i++) {
+      for (let i = 0; i <= 5; i++) {
         if (validateTab(i, formattedData).length === 0) unlocked = i + 1;
         else break;
       }
-      if (unlocked > 4) unlocked = 4;
+      if (unlocked > 5) unlocked = 5;
       setMaxUnlockedTab(unlocked);
       setActiveTab(unlocked);
     } else {
@@ -342,7 +359,7 @@ const App = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const errors = validateTab(4);
+    const errors = validateTab(5);
     if (errors.length > 0) return setValidationErrors(errors);
     setIsSubmitting(true); setSubmitStatus(null);
     try {
@@ -360,7 +377,7 @@ const App = () => {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-5 sm:p-6 text-center">
             <h1 className="text-xl sm:text-2xl font-bold">Movilnet C.A.</h1>
-            <h2 className="text-xs sm:text-sm text-blue-200 mt-1">Gestión Humana - Oferta de Servicio</h2>
+            <h2 className="text-xs sm:text-sm text-blue-200 mt-1">Gestión Humana - Fondo Administrado de Salud</h2>
           </div>
 
           <>
@@ -477,7 +494,7 @@ const App = () => {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           <div>
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight text-center sm:text-left">Telecomunicaciones Movilnet C.A.</h1>
-            <h2 className="text-xs sm:text-sm text-blue-200 mt-0.5 text-center sm:text-left">Gerencia General de Gestión Humana - Oferta de Servicio</h2>
+            <h2 className="text-xs sm:text-sm text-blue-200 mt-0.5 text-center sm:text-left">Fondo Administrado de Salud - Actualización de Datos</h2>
           </div>
           <div className="bg-blue-800 p-2.5 sm:p-3 rounded-lg border border-blue-700 w-full sm:w-auto min-w-[240px] relative">
              <button onClick={() => {setIsAuthenticated(false); setLoginStep('login'); setSubmitStatus(null); setLoginCedula(''); setLoginClave('');}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
@@ -556,7 +573,18 @@ const App = () => {
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.licencia} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gradoLicencia} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
+              {/* NUEVOS CAMPOS: UNIDAD DE ADSCRIPCIÓN Y GERENCIA (FAS Movilnet) */}
+              <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-6">
+                <h4 className="text-xs font-bold text-blue-900 mb-3 uppercase">Adscripción y Ubicación Corporativa (FAS Movilnet)</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Unidad de Adscripción <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.unidadAdscripcion} onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}><option value="">SELECCIONE</option><option value="PRESIDENCIA">PRESIDENCIA</option><option value="VICEPRESIDENCIA">VICEPRESIDENCIA</option></select></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Gerencia General <Req/></label><input type="text" placeholder="Ej. GG GESTION HUMANA" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.gerenciaGeneral} onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Región</label><input type="text" placeholder="Ej. CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.region} onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado de Trabajo</label><input type="text" placeholder="Ej. DISTRITO CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.estadoTrabajo} onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)} /></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 border-t pt-4">
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.tipoVivienda} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.condicionVivienda} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
                 <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.alergico} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.alergiaDesc} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
@@ -564,7 +592,8 @@ const App = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 border-t pt-4">
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.profesion} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro de Colegio" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ocupación Específica</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.ocupacion} onChange={e => handleInputChange('datosPersonales', 'ocupacion', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={formData.datosPersonales.colegiado} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={formData.datosPersonales.nroColegiado} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
@@ -820,6 +849,98 @@ const App = () => {
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* ================= PESTAÑA 6: HCM Y PÓLIZAS ================= */}
+            <div className={activeTab === 5 ? 'block' : 'hidden'}>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 border-b pb-2 flex items-center gap-2">
+                <ShieldPlus className="text-blue-600" size={20} /> Fondo Administrado de Salud (HCM) y Pólizas
+              </h3>
+              <p className="text-xs text-gray-500 mb-6">Información institucional complementaria para la afiliación al fondo de salud de Movilnet[cite: 1, 2].</p>
+
+              {/* Pregunta familiar en Movilnet */}
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
+                <label className="block text-xs font-bold text-blue-900 mb-2 uppercase">¿Posee algún familiar trabajando en Telecomunicaciones Movilnet C.A.? <Req/></label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={formData.hcmPolizas.familiarMovilnet} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnet', e.target.value)}>
+                      <option value="NO">NO</option>
+                      <option value="SÍ">SÍ</option>
+                    </select>
+                  </div>
+                  {formData.hcmPolizas.familiarMovilnet === 'SÍ' && (
+                    <div>
+                      <input type="text" placeholder="Indique el Parentesco y Nombres" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={formData.hcmPolizas.familiarMovilnetParentesco} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnetParentesco', e.target.value)} required />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Pólizas / Seguros vigentes */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-2">
+                  <h4 className="text-sm font-bold text-gray-800 uppercase">¿Mantiene otro Seguro o Fondo de Salud vigente?</h4>
+                  <select className="p-1.5 border rounded bg-white text-xs font-bold" value={formData.hcmPolizas.tieneOtroSeguro} onChange={e => handleInputChange('hcmPolizas', 'tieneOtroSeguro', e.target.value)}>
+                    <option value="NO">NO</option>
+                    <option value="SÍ">SÍ</option>
+                  </select>
+                </div>
+
+                {formData.hcmPolizas.tieneOtroSeguro === 'SÍ' && (
+                  <div className="border rounded-lg p-4 bg-gray-50 mb-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="text-xs font-bold text-gray-700">Pólizas / Fondos Activos</span>
+                      <button type="button" onClick={() => addRow('hcmPolizas', 'segurosVigentes', { empresaSeguros: '', nroPoliza: '', sumaAseguradora: '', deducible: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded font-bold hover:bg-blue-200 flex items-center"><Plus size={14} className="mr-1"/> Agregar Póliza</button>
+                    </div>
+                    {formData.hcmPolizas.segurosVigentes.map((seg, idx) => (
+                      <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2 relative bg-white p-3 border rounded">
+                        <div><label className="block text-[10px] text-gray-500">Empresa de Seguros</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.empresaSeguros} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'empresaSeguros', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">N° de Póliza o Fondo</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.nroPoliza} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'nroPoliza', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">Suma Aseguradora</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.sumaAseguradora} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'sumaAseguradora', e.target.value)} /></div>
+                        <div className="flex gap-2 items-end">
+                          <div className="flex-1"><label className="block text-[10px] text-gray-500">Deducible</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.deducible} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'deducible', e.target.value)} /></div>
+                          <button type="button" onClick={() => removeRow('hcmPolizas', 'segurosVigentes', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded h-8"><Trash2 size={16}/></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Beneficiarios en caso de Fallecimiento */}
+              <div>
+                <div className="flex justify-between items-center mb-3 border-b pb-2">
+                  <h4 className="text-sm font-bold text-gray-800 uppercase">Beneficiarios en Caso de Fallecimiento</h4>
+                  <button type="button" onClick={() => addRow('hcmPolizas', 'beneficiariosFallecimiento', { nombres: '', cedula: '', sexo: '', parentesco: '', porcentaje: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded font-bold hover:bg-blue-200 flex items-center"><Plus size={14} className="mr-1"/> Añadir Beneficiario</button>
+                </div>
+                <div className="overflow-x-auto border rounded-lg">
+                  <table className="w-full text-xs text-left bg-white min-w-[650px]">
+                    <thead className="bg-gray-100 border-b">
+                      <tr>
+                        <th className="p-2 w-1/3">Apellidos y Nombres</th>
+                        <th className="p-2">Cédula</th>
+                        <th className="p-2 w-20">Sexo</th>
+                        <th className="p-2">Parentesco</th>
+                        <th className="p-2 w-24">% Participación</th>
+                        <th className="p-2 w-10 text-center">X</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {formData.hcmPolizas.beneficiariosFallecimiento.map((ben, idx) => (
+                        <tr key={idx} className="border-b hover:bg-gray-50">
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.nombres} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'nombres', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.cedula} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'cedula', e.target.value)} /></td>
+                          <td className="p-1"><select className="w-full p-1.5 border rounded bg-white text-xs" value={ben.sexo} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></td>
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs uppercase" value={ben.parentesco} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'parentesco', e.target.value)} /></td>
+                          <td className="p-1"><input type="number" placeholder="Ej. 100" className="w-full p-1.5 border rounded text-xs" value={ben.porcentaje} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'porcentaje', e.target.value)} /></td>
+                          <td className="p-1 text-center"><button type="button" onClick={() => removeRow('hcmPolizas', 'beneficiariosFallecimiento', idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded"><Trash2 size={14} /></button></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
             </div>
 
             {/* ================= BARRA DE NAVEGACIÓN Y GUARDADO ================= */}
