@@ -1,6 +1,392 @@
 import React, { useState } from 'react';
 import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText } from 'lucide-react';
 
+// ================= DICCIONARIO GEOGRÁFICO DE VENEZUELA =================
+const VENEZUELA_GEO = {
+  "AMAZONAS": {
+    "ALTO ORINOCO": ["HUACHAMACARI", "LA ESMERALDA", "MARAWAKA", "MAVACA", "PARHUEÑA"],
+    "ATABAPO": ["LAJA LISA", "SAN FERNANDO DE ATABAPO", "UCATA", "YAPACANA"],
+    "ATURES": ["FERNANDO GIRÓN TOVAR", "LUIS ALBERTO GÓMEZ", "PARHUEÑA", "PLATANILLAL"],
+    "AUTANA": ["GUAYAPO", "ISLA DE RATÓN", "MUNDUAPO", "SAMARIAPO", "SIPAPO"],
+    "MANAPIARE": ["ALTO VENTUARI", "BAJO VENTUARI", "MEDIO VENTUARI", "SAN JUAN DE MANAPIARE"],
+    "MAROA": ["COMUNIDAD", "MAROA", "VICTORINO"],
+    "RÍO NEGRO": ["ALEXANDER BODU", "CASIQUIARE", "COCUY", "SAN CARLOS DE RÍO NEGRO"]
+  },
+  "ANZOÁTEGUI": {
+    "ANACO": ["ANACO", "BUENA VISTA", "SAN JOAQUÍN"],
+    "ARAGUA": ["ARAGUA DE BARCELONA", "CACHIPO"],
+    "DIEGO BAUTISTA URBANEJA": ["EL MORRO", "LECHERÍA"],
+    "FERNANDO DE PEÑALVER": ["PUERTO PÍRITU", "SAN MIGUEL", "SUCRE"],
+    "FRANCISCO DE MIRANDA": ["ATAPIRIRE", "BOCA DEL PARDO", "EL PAO", "PARIAGUÁN"],
+    "FRANCISCO DEL CARMEN CARVAJAL": ["SANTA BÁRBARA", "VALLE DE GUANAPE"],
+    "GUANTA": ["CHORRERÓN", "GUANTA"],
+    "INDEPENDENCIA": ["MAMO", "SOLEDAD"],
+    "JOSÉ GREGORIO MONAGAS": ["MAPIRE", "PIAR", "SAN DIEGO DE CABRUTICA", "SANTA CLARA", "UVERITO", "ZUATA"],
+    "JUAN ANTONIO SOTILLO": ["POZUELOS", "PUERTO LA CRUZ"],
+    "JUAN MANUEL CAJIGAL": ["ONOTO", "SAN PABLO"],
+    "LIBERTAD": ["EL CARITO", "SAN MATEO", "SANTA INÉS"],
+    "MANUEL EZEQUIEL BRUZUAL": ["CLARINES", "GUANAPE", "SABANA DE UCHIRE"],
+    "PEDRO MARÍA FREITES": ["CANTAURA", "LIBERTADOR", "SANTA ROSA", "URICA"],
+    "PÍRITU": ["PÍRITU", "SAN FRANCISCO"],
+    "SAN JOSÉ DE GUANIPA": ["SAN JOSÉ DE GUANIPA"],
+    "SAN JUAN DE CAPISTRANO": ["BOCA DE UCHIRE", "CHÁVEZ"],
+    "SANTA BÁRBARA": ["SANTA BÁRBARA"],
+    "SIMÓN BOLÍVAR": ["BARCELONA", "BERGANTÍN", "CAIGUA", "EL CARMEN", "EL PILAR", "NARICUAL", "SAN CRISTÓBAL"],
+    "SIMÓN RODRÍGUEZ": ["EDMUNDO BARRIOS", "MIGUEL OTERO SILVA"],
+    "SIR ARTHUR MCGREGOR": ["EL CHAPARRO"]
+  },
+  "APURE": {
+    "ACHAGUAS": ["ACHAGUAS", "APURITO", "EL YAGUAL", "GUACHARA", "MUCURITAS", "SAN VICENTE"],
+    "BIRUACA": ["BIRUACA"],
+    "MUÑOZ": ["BRUZUAL", "MANTECAL", "QUINTERO", "RINCÓN HONDO", "SAN VICENTE"],
+    "PEDRO CAMEJO": ["CODAZZI", "CUNAVICHE", "SAN JUAN DE PAYARA"],
+    "PÁEZ": ["ARAMENDI", "EL AMPARO", "GUASDUALITO", "SAN ANTONIO DEL TÁCHIRA", "SAN CAMILO"],
+    "RÓMULO GALLEGOS": ["ELORZA", "LA TRINIDAD DE ORICHUNA"],
+    "SAN FERNANDO": ["EL RECREO", "PEÑALVER", "SAN FERNANDO", "SAN RAFAEL DE ATAMAICA"]
+  },
+  "ARAGUA": {
+    "BOLÍVAR": ["SAN MATEO"],
+    "CAMATAGUA": ["CAMATAGUA", "CARMEN DE CURA"],
+    "FRANCISCO LINARES ALCÁNTARA": ["FRANCISCO DE MIRANDA", "MONSEÑOR FELICIANO GONZÁLEZ", "SANTA RITA"],
+    "GIRARDOT": ["ANDRÉS ELOY BLANCO", "CHORONÍ", "EL LIMÓN", "JOAQUÍN CRESPO", "JOSÉ CASANOVA GODOY", "LAS DELICIAS", "MADRE MARÍA DE SAN JOSÉ", "MARACAY", "PEDRO JOSÉ OVALLE"],
+    "JOSÉ FÉLIX RIBAS": ["CASTOR NIEVES RÍOS", "LA VICTORIA", "LAS GUACAMAYAS", "PAO DE ZÁRATE", "ZUATA"],
+    "JOSÉ RAFAEL REVENGA": ["EL CONSEJO"],
+    "JOSÉ ÁNGEL LAMAS": ["SANTA CRUZ"],
+    "LIBERTADOR": ["PALO NEGRO", "SAN MARTÍN DE PORRES"],
+    "MARIO BRICEÑO IRAGORRY": ["CAÑA DE AZÚCAR", "EL LIMÓN"],
+    "OCUMARE DE LA COSTA DE ORO": ["OCUMARE DE LA COSTA"],
+    "SAN CASIMIRO": ["GÜIRIPA", "OLLAS DE CARAMACATE", "SAN CASIMIRO", "VALLE MORÍN"],
+    "SAN SEBASTIÁN": ["SAN SEBASTIÁN DE LOS REYES"],
+    "SANTIAGO MARIÑO": ["AREVALO APONTE", "CHUAO", "PEDRO ARÉVALO APONTE", "SAMÁN DE GÜERE", "TURMERO"],
+    "SANTOS MICHELENA": ["LAS TEJERÍAS", "TIARA"],
+    "SUCRE": ["BELLA VISTA", "CAGUA"],
+    "TOVAR": ["COLONIA TOVAR"],
+    "URDANETA": ["BARBACOAS", "LAS PEÑITAS", "SAN FRANCISCO DE CARA", "TAGUAY"],
+    "ZAMORA": ["AUGUSTO MIJARES", "MAGDALENO", "SAN FRANCISCO DE ASÍS", "VALLES DE TUCUTUNEMO", "VILLA DE CURA"]
+  },
+  "BARINAS": {
+    "ALBERTO ARVELO TORREALBA": ["RODRÍGUEZ DOMÍNGUEZ", "SABANETA"],
+    "ANDRÉS ELOY BLANCO": ["EL CANTÓN", "PUERTO VIVAS", "SANTA CRUZ DE GUACAS"],
+    "ANTONIO JOSÉ DE SUCRE": ["ANDRÉS BELLO", "NICOLÁS PULIDO", "SOCOPÓ"],
+    "ARISMENDI": ["ARISMENDI", "GUADARRAMA", "LA UNIÓN", "SAN ANTONIO"],
+    "BARINAS": ["ALFREDO ARVELO LARRIVA", "ALTO BARINAS", "BARINAS", "CORAZÓN DE JESÚS", "EL CARMEN", "MANUEL PALACIO FAJARDO", "RAMÓN IGNACIO MÉNDEZ", "RÓMULO BETANCOURT", "SAN SILVESTRE", "SANTA INÉS", "TORUNOS"],
+    "BOLÍVAR": ["ALTAMIRA DE CÁCERES", "BARINITAS", "CALDERAS"],
+    "CRUZ PAREDES": ["BARRANCAS", "EL SOCORRO", "MASPARRITO"],
+    "EZEQUIEL ZAMORA": ["JOSÉ IGNACIO DEL PUMAR", "PEDRO BRICEÑO MÉNDEZ", "RAMÓN IGNACIO MÉNDEZ", "SANTA BÁRBARA"],
+    "OBISPOS": ["EL REAL", "LA LUZ", "LOS GUASIMITOS", "OBISPOS"],
+    "PEDRAZA": ["ANDRÉS ELOY BLANCO", "CIUDAD BOLIVIA", "IGNACIO BRICEÑO", "JOSÉ ANTONIO PÁEZ"],
+    "ROJAS": ["DOLORES", "LIBERTAD", "PALACIO FAJARDO", "SANTA ROSA"],
+    "SOSA": ["CIUDAD DE NUTRIAS", "EL REGALO", "PUERTO DE NUTRIAS", "SANTA CATALINA"]
+  },
+  "BOLÍVAR": {
+    "ANGOSTURA": ["BARCELONETA", "CIUDAD PIAR", "SAN FRANCISCO", "SANTA BÁRBARA"],
+    "ANGOSTURA DEL ORINOCO": ["AGUA SALADA", "CATEDRAL", "JOSÉ ANTONIO PÁEZ", "MARHUANTA", "ORINOCO", "PANAPANA", "SABANITA", "SAN FRANCISCO DE ASÍS", "ZEAS"],
+    "CARONÍ": ["CACHAMAY", "CHIRICA", "DALLA COSTA", "ONOFRE ANZOÁTEGUI", "POZO VERDE", "SIMÓN BOLÍVAR", "UNARE", "UNIVERSIDAD", "VISTA AL SOL", "YOCOIMA"],
+    "CEDEÑO": ["ALTAGRACIA", "ASCENSIÓN FARRERAS", "CAICARA DEL ORINOCO", "LA URBANA", "PIJIGUAOS"],
+    "CHIEN": ["EL PALMAR"],
+    "EL CALLAO": ["EL CALLAO"],
+    "GRAN SABANA": ["IKABARÚ", "SANTA ELENA DE UAIRÉN"],
+    "PADRE PEDRO CHIEN": ["EL PALMAR"],
+    "PIAR": ["ANDRÉS ELOY BLANCO", "PEDRO COVA", "UPATA"],
+    "ROSCIO": ["GUASIPATI", "SALOM"],
+    "SIFONTES": ["DALLA COSTA", "SAN ISIDRO", "TUMEREMO"],
+    "SUCRE": ["BORBON", "GUARATARO", "LAS MAJADAS", "MARIPA", "MOITACO"]
+  },
+  "CARABOBO": {
+    "BEJUMA": ["BEJUMA", "CANOABO", "SIMÓN BOLÍVAR"],
+    "CARLOS ARVELO": ["BELÉN", "CENTRAL TACARIGUA", "GÜIGÜE"],
+    "DIEGO IBARRA": ["AGUAS CALIENTES", "MARIARA"],
+    "GUACARA": ["CIUDAD ALIANZA", "GUACARA", "YAGUA"],
+    "JUAN JOSÉ MORA": ["MORÓN", "URAMA"],
+    "LIBERTADOR": ["INDEPENDENCIA", "TOCUYITO"],
+    "LOS GUAYOS": ["LOS GUAYOS"],
+    "MIRANDA": ["MIRANDA"],
+    "MONTALBÁN": ["MONTALBÁN"],
+    "NAGUANAGUA": ["NAGUANAGUA"],
+    "PUERTO CABELLO": ["BARTOLOMÉ SALOM", "DEMOCRACIA", "EL CAMBUR", "FRATERNIDAD", "GOAIGOAZA", "JUAN JOSÉ FLORES", "LANCEROS", "LAS DELICIAS", "PATANEMO"],
+    "SAN DIEGO": ["SAN DIEGO"],
+    "SAN JOAQUÍN": ["SAN JOAQUÍN"],
+    "VALENCIA": ["CANDELARIA", "CATEDRAL", "EL SOCORRO", "MIGUEL PEÑA", "NEGRO PRIMERO", "RAFAEL URDANETA", "SAN BLAS", "SAN JOSÉ", "SANTA ROSA"]
+  },
+  "COJEDES": {
+    "ANZOÁTEGUI": ["COJEDES", "JUAN DE DIOS AGUANE"],
+    "EZEQUIEL ZAMORA": ["JUAN ÁNGEL BRAVO", "MANUEL MANRIQUE", "SAN CARLOS"],
+    "GIRARDOT": ["EL BAÚL", "SUCRE"],
+    "LIMA BLANCO": ["LA AGUADITA", "MACAPO"],
+    "PAO DE SAN JUAN BAUTISTA": ["EL PAO"],
+    "RICAURTE": ["EL AMPARO", "LIBERTAD"],
+    "RÓMULO GALLEGOS": ["LAS VEGAS"],
+    "SAN JOSÉ DE MAPIRE": ["PANAQUIRE"],
+    "TINACO": ["TINACO"],
+    "TINAQUILLO": ["TINAQUILLO"]
+  },
+  "DELTA AMACURO": {
+    "ANTONIO DÍAZ": ["ALMIRANTE LUIS BRIÓN", "ANICETO LUGO", "CURIAPO", "MANUEL RENAUD", "PADRE BARRAL", "SANTOS DE ABELGAS"],
+    "CASACOIMA": ["JUAN BAUTISTA ARISMENDI", "MANUEL PIAR", "RÓMULO GALLEGOS", "SIERRA IMATACA"],
+    "PEDERNALES": ["LUIS BELTRÁN PRIETO FIGUEROA", "PEDERNALES"],
+    "TUCUPITA": ["JOSÉ VIDAL MARCANO", "LEONARDO RUIZ PINEDA", "MARISCAL ANTONIO JOSÉ DE SUCRE", "MONSEÑOR ARGIMIRO GARCÍA", "SAN JOSÉ", "SAN RAFAEL", "VIRGEN DEL VALLE"]
+  },
+  "DISTRITO CAPITAL": {
+    "LIBERTADOR": ["23 DE ENERO", "ALTAGRACIA", "ANTÍMANO", "CARICUAO", "CATEDRAL", "COCHE", "EL JUNQUITO", "EL PARAÍSO", "EL RECREO", "EL VALLE", "LA CANDELARIA", "LA PASTORA", "LA VEGA", "MACARAO", "SAN AGUSTÍN", "SAN BERNARDINO", "SAN JOSÉ", "SAN JUAN", "SAN PEDRO", "SANTA ROSALÍA", "SANTA TERESA", "SUCRE"]
+  },
+  "FALCÓN": {
+    "ACOSTA": ["CAPADARE", "LA PASTORA", "LIBERTADOR", "SAN JUAN DE LOS CAYOS"],
+    "BOLÍVAR": ["ARACUA", "LA PEÑA", "SAN LUIS"],
+    "BUCHIVACOA": ["BARIRO", "BOROJÓ", "CAPATÁRIDA", "GUAJIRO", "SEQUE", "ZAZÁRIDA"],
+    "CACIQUE MANAURE": ["YARACAL"],
+    "CARIRUBANA": ["CARIRUBANA", "MARAVEN", "PUNTA CARDÓN", "SANTA ANA"],
+    "COLINA": ["ACURIGUA", "GUAIBACOA", "LA VELA DE CORO", "LAS CALDERAS", "MACORUCA"],
+    "DABAJURO": ["DABAJURO"],
+    "DEMOCRACIA": ["AGUA CLARA", "AVARIA", "PEDREGAL", "PIEDRA GRANDE"],
+    "FALCÓN": ["ADÍCORA", "BARAIVED", "BUENA VISTA", "EL HATO", "EL VÍNCULO", "JADACAQUIVA", "MORUY", "PUEBLO NUEVO"],
+    "FEDERACIÓN": ["AGUA LARGA", "CAMARUCA", "CHURUGUARA", "EL PAUJÍ", "MAPARARÍ"],
+    "JACURA": ["AGUA LINDA", "JACURA", "SAN ANTONIO"],
+    "LOS TAQUES": ["JUANA DE ÁVILA", "LOS TAQUES"],
+    "MAUROA": ["CASIGUA", "MENE DE MAUROA", "SAN FÉLIX"],
+    "MIRANDA": ["GUZMÁN GUILLERMO", "MITARE", "SABANETA", "SAN ANTONIO", "SAN GABRIEL", "SANTA ANA DE CORO"],
+    "MONSEÑOR ITURRIZA": ["BOCA DE TOCUYO", "CHICHIRIVICHE", "TOCUYO DE LA COSTA"],
+    "PALMASOLA": ["PALMASOLA"],
+    "PETIT": ["CABURE", "COLINA", "CURIMAGUA"],
+    "PÍRITU": ["PÍRITU", "SAN JOSÉ DE LA COSTA"],
+    "SAN FRANCISCO": ["MIRIMIRE"],
+    "SILVA": ["BOCA DE AROA", "TUCACAS"],
+    "SUCRE": ["CRUZ DE TARATARA", "PECAYA"],
+    "TOCÓPERO": ["TOCÓPERO"],
+    "UNIÓN": ["EL CHARAL", "SANTA CRUZ DE BUCARAL", "VEGAS DEL MAITA"],
+    "URUMACO": ["BRUZUAL", "URUMACO"],
+    "ZAMORA": ["LA CIÉNAGA", "LA SOLEDAD", "NUEVA VISTA", "PUERTO CUMAREBO", "ZAZÁRIDA"]
+  },
+  "GUÁRICO": {
+    "CAMAGUÁN": ["CAMAGUÁN", "PUERTO MIRANDA", "UVERITO"],
+    "CHAGUARAMAS": ["CHAGUARAMAS"],
+    "EL SOCORRO": ["EL SOCORRO"],
+    "FRANCISCO DE MIRANDA": ["CALABOZO", "EL CALVARIO", "EL RASTRO", "GUARDATINAJAS"],
+    "JOSÉ FÉLIX RIBAS": ["SAN RAFAEL DE LAYA", "TUCUPIDO"],
+    "JOSÉ TADEO MONAGAS": ["ALTAGRACIA DE ORITUCO", "LIBERTAD DE ORITUCO", "PASO REAL", "SAN FRANCISCO DE JAVIER", "SAN RAFAEL DE ORITUCO"],
+    "JUAN GERMÁN ROSCIO": ["CANTAGALLO PARAPARA", "SAN JUAN DE LOS MORROS"],
+    "JULIÁN MELLADO": ["EL SOMBRERO", "SOSA"],
+    "LAS MERCEDES": ["CABRUTA", "LAS MERCEDES", "SANTA RITA DE MANAPIRE"],
+    "ORTIZ": ["ORTIZ", "SAN FRANCISCO DE TIZNADOS", "SAN JOSÉ DE TIZNADOS", "SAN LORENZO DE TIZNADOS"],
+    "PEDRO ZARAZA": ["SAN JOSÉ DE UNARE", "ZARAZA"],
+    "SAN GERÓNIMO DE GUAYABAL": ["CAZORLA", "GUAYABAL"],
+    "SAN JOSÉ DE GUARIBE": ["SAN JOSÉ DE GUARIBE"],
+    "SANTA MARÍA DE IPIRE": ["ALTAMIRA", "SANTA MARÍA DE IPIRE"],
+    "SOCORRO": ["EL SOCORRO"]
+  },
+  "LARA": {
+    "ANDRÉS ELOY BLANCO": ["PÍO TAMAYO", "SANARE", "YACAMBÚ"],
+    "CRESPO": ["DUACA", "FREITEZ"],
+    "IRIBARREN": ["AGUEDO FELIPE ALVARADO", "BUENA VISTA", "CATEDRAL", "CONCEPCIÓN", "EL CUJÍ", "JUAN DE VILLEGAS", "JUÁREZ", "SANTA ROSA", "TAMACA", "UNIÓN"],
+    "JIMÉNEZ": ["CUARA", "DIEGO DE LOZADA", "JUAN BAUTISTA RODRÍGUEZ", "PARAÍSO DE SAN JOSÉ", "QUÍBOR", "SAN MIGUEL", "TINTORERO"],
+    "MORÁN": ["ANZOÁTEGUI", "BARBACOAS", "EL TOCUYO", "HILARIO LUNA LUNA", "HUMOCARO ALTO", "HUMOCARO BAJO", "MORÁN"],
+    "PALAVECINO": ["AGUA VIVA", "CABUDARE", "JOSÉ GREGORIO BASTIDAS"],
+    "SIMÓN PLANAS": ["BURÍA", "GUSTAVO VEGA", "SARARE"],
+    "TORRES": ["ANTONIO DÍAZ", "CAMACARO", "CARORA", "CASTAÑEDA", "CECILIO ZUBILLAGA", "CHIQUINQUIRÁ", "EL BLANCO", "ESPINOZA DE LOS MONTEROS", "LARA", "LAS MERCEDES", "MANUEL MORILLO", "MONTAÑA VERDE", "REYES VARGAS", "TORRES", "TRINIDAD SAMUEL"],
+    "URDANETA": ["MOROTURO", "SAN MIGUEL", "SIQUISIQUE", "XAGUAS"]
+  },
+  "MIRANDA": {
+    "ACEVEDO": ["ARAGUITA", "ARÉVALO GONZÁLEZ", "CAPAYA", "CAUCAGUA", "EL CAFÉ", "MARIZAPA", "PANAQUIRE", "RIBAS"],
+    "ANDRÉS BELLO": ["CUMBO", "SAN JOSÉ DE BARLOVENTO"],
+    "BARUTA": ["BARUTA", "EL CAFETAL", "LAS MERCEDES"],
+    "BRIÓN": ["CURIEPE", "HIGUEROTE", "TACARIGUA DE MAMPORAL"],
+    "BRUZUAL": ["CHAGUARAMAS"],
+    "CARRIZAL": ["CARRIZAL"],
+    "CHACAO": ["CHACAO"],
+    "CRISTÓBAL ROJAS": ["CHARALLAVE", "LAS BRISAS"],
+    "EL HATILLO": ["EL HATILLO"],
+    "GUAICAIPURO": ["ALTAGRACIA DE LA MONTAÑA", "CECILIO ACOSTA", "EL JARILLO", "LOS TEQUES", "PARACOTOS", "SAN PEDRO", "TÁCATA"],
+    "INDEPENDENCIA": ["CARTANAL", "SANTA TERESA DEL TUY"],
+    "LANDER": ["LA DEMOCRACIA", "OCUMARE DEL TUY", "SANTA BÁRBARA"],
+    "LOS SALIAS": ["SAN ANTONIO DE LOS ALTOS"],
+    "PAZ CASTILLO": ["SANTA LUCÍA"],
+    "PEDRO GUAL": ["CÚPIRA", "MACHURUCUTO"],
+    "PLAZA": ["GUARENAS"],
+    "PÁEZ": ["EL GUAPO", "PAPARO", "RÍO CHICO", "SAN FERNANDO DE GUAPO", "TACARIGUA DE LA LAGUNA"],
+    "SIMÓN BOLÍVAR": ["SAN ANTONIO DE YARE", "SAN FRANCISCO DE YARE"],
+    "SUCRE": ["CAUCAGÜITA", "FILAS DE MARICHE", "LA DOLORITA", "LEONCIO MARTÍNEZ", "PETARE"],
+    "URDANETA": ["CÚA", "NUEVA CÚA"],
+    "ZAMORA": ["BOLÍVAR", "GUATIRE"]
+  },
+  "MONAGAS": {
+    "ACOSTA": ["SAN ANTONIO DE MATURÍN", "SAN FRANCISCO DE MATURÍN"],
+    "AGUASAY": ["AGUASAY"],
+    "BOLÍVAR": ["CARIPITO"],
+    "CARIPE": ["CARIPE", "EL GUÁCHARO", "LA GUANOTA", "SAN AGUSTÍN", "TERESÉN"],
+    "CEDEÑO": ["AREO", "CAICARA DE MATURÍN", "SAN FÉLIX", "VIENTO FRESCO"],
+    "EZEQUIEL ZAMORA": ["EL TEJERO", "PUNTA DE MATA"],
+    "LIBERTADOR": ["CHAGUARAMAS", "LAS ALHUACAS", "TABASCA", "TEMBLADOR"],
+    "MATURÍN": ["ALTO DE LOS GODOS", "BOQUERÓN", "EL COROZO", "EL FURRIAL", "JUSEPÍN", "LA PICA", "LAS COCUIZAS", "SAN SIMÓN", "SAN VICENTE", "SANTA CRUZ"],
+    "PIAR": ["APARICIO", "ARAGUA DE MATURÍN", "CHAGUARAMAL", "GUANAGUANA", "TAGUAYA"],
+    "PUNCERES": ["CACHIPO", "QUIRIQUIRE"],
+    "SANTA BÁRBARA": ["SANTA BÁRBARA"],
+    "SOTILLO": ["BARRANCAS DEL ORINOCO", "LOS BARRANCOS DE FAJARDO"],
+    "URACOA": ["URACOA"]
+  },
+  "MÉRIDA": {
+    "ALBERTO ADRIANI": ["EL VIGÍA", "GABRIEL PICÓN GONZÁLEZ", "HÉCTOR AMABLE MORA", "PRESIDENTE BETANCOURT", "PRESIDENTE PÁEZ", "PRESIDENTE RÓMULO GALLEGOS", "PULIDO MÉNDEZ"],
+    "ANDRÉS BELLO": ["AZULITA"],
+    "ANTONIO PINTO SALINAS": ["MESA BOLÍVAR", "MESA DE LAS PALMAS", "SANTA CRUZ DE MORA"],
+    "ARICAGUA": ["ARICAGUA", "SAN ANTONIO"],
+    "ARZOBISPO CHACÓN": ["CANAGUA", "CAPURÍ", "CHACANTÁ", "EL MOLINO", "GUAIMARAL", "MUCUCHACHÍ", "MUCUTUY"],
+    "CAMPO ELÍAS": ["ACEQUIAS", "EJIDO", "JAJÍ", "LA MESA", "MATRIZ", "MONTALBÁN", "SAN JOSÉ"],
+    "CARACCIOLO PARRA OLMEDO": ["FLORENCIO RAMÍREZ", "TUCANÍ"],
+    "CARDENAL QUINTERO": ["LAS PIEDRAS", "SANTO DOMINGO"],
+    "GUARAQUE": ["GUARAQUE", "MESA DE QUINTERO", "RÍO NEGRO"],
+    "JULIO CÉSAR SALAS": ["ARAPUEY", "PALMIRA"],
+    "JUSTO BRICEÑO": ["SAN CRISTÓBAL DE TORONDOY", "TORONDOY"],
+    "LIBERTADOR": ["ANTONIO SPINETTI DINI", "ARIAS", "CARACCIOLO PARRA PÉREZ", "DOMINGO PEÑA", "EL LLANO", "EL MORRO", "GONZALO PICÓN FEBRES", "JACINTO PLAZA", "JUAN RODRÍGUEZ SUÁREZ", "LOS NEVADOS", "MILLA", "OSUNA RODRÍGUEZ", "SAGRARIO"],
+    "MIRANDA": ["ANDRÉS ELOY BLANCO", "LA VENTA", "PIÑANGO", "TIMOTES"],
+    "OBISPO RAMOS DE LORA": ["ELOY PAREDES", "SAN RAFAEL DE ALCÁZAR", "SANTA ELENA DE ARENALES"],
+    "PADRE NOGUERA": ["SANTA MARÍA DE CAPARO"],
+    "PUEBLO LLANO": ["PUEBLO LLANO"],
+    "RANGEL": ["CACUTE", "LA TOMA", "MUCUCHÍES", "MUCURUBÁ", "SAN RAFAEL"],
+    "RIVAS DÁVILA": ["BAILADORES", "GERÓNIMO MALDONADO"],
+    "SANTOS MARQUINA": ["TABAY"],
+    "SUCRE": ["CHIGUARÁ", "ESTÁNQUEZ", "LAGUNILLAS", "PUEBLO NUEVO DEL SUR", "SAN JUAN"],
+    "TOVAR": ["EL AMPARO", "EL LLANO", "SAN FRANCISCO", "TOVAR"],
+    "TULIO FEBRES CORDERO": ["INDEPENDENCIA", "MARÍA DE LA CONCEPCIÓN PALACIOS BLANCO", "NUEVA BOLIVIA", "SANTA APOLONIA"],
+    "ZEA": ["CAÑO EL TIGRE", "ZEA"]
+  },
+  "NUEVA ESPARTA": {
+    "ANTOLÍN DEL CAMPO": ["PLAZA PARAGUACHÍ"],
+    "ARISMENDI": ["LA ASUNCIÓN"],
+    "DÍAZ": ["SAN JUAN BAUTISTA", "ZABALA"],
+    "GARCÍA": ["EL VALLE DEL ESPÍRITU SANTO", "FRANCISCO FAJARDO"],
+    "GÓMEZ": ["BOLÍVAR", "GUEVARA", "MATASIETE", "SANTA ANA", "SUCRE"],
+    "MANEIRO": ["AGUIRRE", "PAMPATAR"],
+    "MARCANO": ["ADRIÁN", "JUAN GRIEGO"],
+    "MARIÑO": ["PORLAMAR"],
+    "PENÍNSULA DE MACANAO": ["BOCA DE RÍO", "SAN FRANCISCO"],
+    "TUBORES": ["LOS CHARLES", "PUNTA DE PIEDRAS"],
+    "VILLALBA": ["SAN PEDRO DE COCHE", "VICENTE FUENTES"]
+  },
+  "PORTUGUESA": {
+    "AGUA BLANCA": ["AGUA BLANCA"],
+    "ARAURE": ["ARAURE", "RÍO ACARIGUA"],
+    "ESTELLER": ["PÍRITU", "URIMIQUIRE"],
+    "GUANARE": ["CÓRDOBA", "GUANARE", "SAN JOSÉ DE SAGUAZ", "SAN JUAN DE GUANAGUANARE", "VIRGEN DE LA COROMOTO"],
+    "GUANARITO": ["DIVINA PASTORA", "GUANARITO", "TRINIDAD DE LA CAPILLA"],
+    "MONSEÑOR JOSÉ VICENTE DE UNDA": ["CHABASQUÉN"],
+    "OSPINO": ["APARICIÓN", "LA ESTACIÓN", "OSPINO"],
+    "PAPELÓN": ["CAÑO DELGADITO", "PAPELÓN"],
+    "PÁEZ": ["ACARIGUA", "PAYARA", "PIMPINELA", "RAMÓN PERAZA"],
+    "SAN GENARO DE BOCONOÍTO": ["ANTOLÍN TOVAR", "BOCONOÍTO"],
+    "SAN RAFAEL DE ONOTO": ["COREN", "SAN RAFAEL DE ONOTO", "SANTA FE"],
+    "SANTA ROSALÍA": ["EL PLAYÓN", "FLORIDA"],
+    "SUCRE": ["BISCUCUY", "CONCEPCIÓN", "SAN JOSÉ DE SAGUAZ", "SAN RAFAEL DE PALO ALZADO", "UVENCIO ANTONIO VELÁSQUEZ"],
+    "TURÉN": ["CANELONES", "SAN ISIDRO LABRADOR", "SANTA CRUZ", "VILLA BRUZUAL"]
+  },
+  "SUCRE": {
+    "ANDRÉS ELOY BLANCO": ["CASANAY", "MARIÑO", "RÓMULO GALLEGOS"],
+    "ANDRÉS MATA": ["SAN JOSÉ DE AEROCUAR", "TAVERA ACOSTA"],
+    "ARISMENDI": ["ANTONIO JOSÉ DE SUCRE", "EL MORRO DE PUERTO SANTO", "PUERTO SANTO", "RÍO CARIBE", "SAN JUAN DE LAS GALDONAS"],
+    "BENÍTEZ": ["EL PILAR", "EL RINCÓN", "GENERAL FRANCISCO ANTONIO VÁSQUEZ", "GUARAÚNOS", "TUNAPUICITO", "UNIÓN"],
+    "BERMÚDEZ": ["BOLÍVAR", "CARÚPANO", "MACARAPANA", "SANTA CATALINA", "SANTA ROSA"],
+    "BOLÍVAR": ["MARIGÜITAR"],
+    "CAJIGAL": ["EL PAUJIL", "LIBERTAD", "YAGUARAPARO"],
+    "CRUZ SALMERÓN ACOSTA": ["ARAYA", "CHACOPATA", "MANICUARE"],
+    "LIBERTADOR": ["CAMPO ELÍAS", "TUNAPUY"],
+    "MARIÑO": ["CAMPO CLARO", "IRAPA", "MARAVAL", "SAN ANTONIO DE IRAPA", "SORO"],
+    "MEJÍA": ["SAN ANTONIO DEL GOLFO"],
+    "MONTES": ["ARENAS", "ARICAGUA", "COCOLLAR", "CUMANACOA", "SAN FERNANDO", "SAN LORENZO"],
+    "RIBERO": ["CARIACO", "CATUARO", "MUELLE DE CARIACO", "SANTA CRUZ", "SANTA MARÍA"],
+    "SUCRE": ["ALTAGRACIA", "AYACUCHO", "CUMANÁ", "SAN JUAN", "SANTA INÉS", "VALENTÍN VALIENTE"],
+    "VALDEZ": ["BIDEAU", "CRISTÓBAL COLÓN", "GÜIRIA", "PUNTA DE PIEDRAS"]
+  },
+  "TRUJILLO": {
+    "ANDRÉS BELLO": ["ARAGUANEY", "EL JAGUITO", "LA ESPERANZA", "SANTA ISABEL"],
+    "BOCONÓ": ["AYACUCHO", "BOCONÓ", "BURBUSAY", "EL CARMEN", "GENERAL RIBAS", "GUARAMACAL", "MONSEÑOR JÁUREGUI", "RAFAEL RANGEL", "SAN JOSÉ", "SAN LÁZARO", "VEGA DE GUARAMACAL"],
+    "BOLÍVAR": ["JUNÍN", "SABANA DE MENDOZA", "VALMORE RODRÍGUEZ"],
+    "CANDELARIA": ["ARNOLD ANZOLA", "BOLIVIA", "CARRILLO", "CEGARRA", "CHEJENDÉ", "MANUEL SALVADOR SALCEDO", "SAN JOSÉ"],
+    "CARACHE": ["CARACHE", "CUICAS", "LA CONCEPCIÓN", "PANAMERICANA", "SANTA CRUZ"],
+    "CARVAJAL": ["ANTONIO NICOLÁS BRICEÑO", "CAMPO ALEGRE", "JOSÉ LEONARDO SUÁREZ", "SAN RAFAEL DE CARVAJAL"],
+    "ESCUQUE": ["ESCUQUE", "LA UNIÓN", "SABANA LIBRE", "SANTA RITA"],
+    "JOSÉ FELIPE MÁRQUEZ CAÑIZALEZ": ["ANTONIO JOSÉ DE SUCRE", "EL PARADERO", "LOS CAPRICHOS"],
+    "JUAN VICENTE CAMPOS ELÍAS": ["CAMPOS ELÍAS"],
+    "LA CEIBA": ["EL PROGRESO", "LA CEIBA", "SANTA APOLONIA"],
+    "MIRANDA": ["AGUA CALIENTE", "AGUA SANTA", "EL CENIZO", "EL DIVIDIVE", "VALERITA"],
+    "MONTE CARMELO": ["BUENA VISTA", "MONTE CARMELO", "SANTA MARÍA DEL HORCÓN"],
+    "MOTATÁN": ["EL BAÑO", "JALISCO", "MOTATÁN"],
+    "PAMPANITO": ["LA CONCEPCION", "PAMPANITO", "PAMPANITO II"],
+    "PAMPÁN": ["FLOR DE PATRIA", "LA PAZ", "PAMPÁN", "SANTA ANA"],
+    "RAFAEL RANGEL": ["BETIJOQUE", "JOSÉ GREGORIO HERNÁNDEZ", "LA PUEBLITA", "LOS CEDROS"],
+    "SAN RAFAEL DE CARVAJAL": ["CARVAJAL"],
+    "SUCRE": ["SABANA DE MENDOZA"],
+    "TRUJILLO": ["ANDRÉS LINARES", "CHIQUINQUIRÁ", "CRISTÓBAL MENDOZA", "CRUZ CARRILLO", "MATAMOROS", "MONSEÑOR CARRILLO", "TRUJILLO"],
+    "URDANETA": ["CABIMBÚ", "JAJÓ", "LA MESA DE ESNUJAQUE", "LA QUEBRADA", "SANTIAGO", "TUÑAME"],
+    "VALERA": ["JUAN IGNACIO MONTILLA", "LA BEATRIZ", "LA PUERTA", "MENDOZA DEL VALLE DE MOMBOY", "MERCEDES DÍAZ", "SAN LUIS", "VALERA"]
+  },
+  "TÁCHIRA": {
+    "ANDRÉS BELLO": ["CORDERO"],
+    "ANTONIO RÓMULO COSTA": ["LAS MESAS"],
+    "AYACUCHO": ["RIVAS BERTI", "SAN JUAN DE COLÓN", "SAN PEDRO DEL RÍO"],
+    "BOLÍVAR": ["ISAÍAS MEDINA ANGARITA", "JUAN VICENTE GÓMEZ", "PALOTAL", "SAN ANTONIO DEL TÁCHIRA"],
+    "CHACÓN": ["SAN JOSECITO"],
+    "CÁRDENAS": ["AMENODORO RANGEL LAMUS", "LA FLORIDA", "TRIBA"],
+    "CÓRDOBA": ["SANTA ANA DEL TÁCHIRA"],
+    "DELICIAS": ["DELICIAS"],
+    "FERNÁNDEZ FEO": ["ALBERTO ADRIANI", "SAN RAFAEL DEL PIÑAL", "SANTO DOMINGO"],
+    "FRANCISCO DE MIRANDA": ["SAN JOSÉ DE BOLÍVAR"],
+    "GARCÍA DE HEVIA": ["BOCA DE GRITA", "JOSÉ ANTONIO PÁEZ", "LA FRÍA"],
+    "GUÁSIMOS": ["PALMIRA"],
+    "INDEPENDENCIA": ["CAPACHO NUEVO", "JUAN GERMÁN ROSCIO", "ROMÁN CÁRDENAS"],
+    "JOSÉ MARÍA VARGAS": ["EL COBRE"],
+    "JUNÍN": ["BRAMÓN", "LA PETRÓLEA", "QUINIMARÍ", "RUBIO"],
+    "JÁUREGUI": ["EMILIO CONSTANTINO GUERRERO", "LA GRITA", "MONSEÑOR MIGUEL ANTONIO SALAS"],
+    "LIBERTAD": ["CAPACHO VIEJO", "CIPRIANO CASTRO", "MANUEL FELIPE RUGELES"],
+    "LIBERTADOR": ["ABEJALES", "DORADAS", "EMETERIO OCHOA", "SAN JOAQUÍN DE NAVAY"],
+    "LOBATERA": ["CONSTITUCIÓN", "LOBATERA"],
+    "MICHELENA": ["MICHELENA"],
+    "PANAMERICANO": ["COLONCITO", "LA PALMITA"],
+    "PEDRO MARÍA UREÑA": ["NUEVA ARCADIA", "UREÑA"],
+    "SAMUEL DARÍO MALDONADO": ["BOCONÓ", "HERNÁNDEZ", "LA TENDIDA"],
+    "SAN CRISTÓBAL": ["FRANCISCO ROMERO LOBO", "LA CONCORDIA", "PEDRO MARÍA MORANTES", "SAN CRISTÓBAL", "SAN JUAN BAUTISTA"],
+    "SEBORUCO": ["SEBORUCO"],
+    "SIMÓN RODRÍGUEZ": ["SAN SIMÓN"],
+    "SUCRE": ["ELEAZAR LÓPEZ CONTRERAS", "QUENIQUEA", "SAN PABLO"],
+    "TORBES": ["SAN JOSECITO"],
+    "URIBANTE": ["CÁRDENAS", "JUAN PABLO PEÑALOZA", "POTOSÍ", "PREGONERO"]
+  },
+  "YARACUY": {
+    "ARISTIDES BASTIDAS": ["SAN PABLO"],
+    "BOLÍVAR": ["AROA"],
+    "BRUZUAL": ["CAMPO ELÍAS", "CHIVACOA"],
+    "COCOROTE": ["COCOROTE"],
+    "INDEPENDENCIA": ["INDEPENDENCIA"],
+    "JOSÉ ANTONIO PÁEZ": ["SABANA DE PARRA"],
+    "LA TRINIDAD": ["BORAURE"],
+    "MANUEL MONGE": ["YUMARE"],
+    "NIRGUA": ["NIRGUA", "SALÓM", "TEMERLA"],
+    "PEÑA": ["SAN ANDRÉS", "YARITAGUA"],
+    "SAN FELIPE": ["ALBARICO", "SAN FELIPE", "SAN JAVIER"],
+    "SUCRE": ["GUAMA"],
+    "URACHICHE": ["URACHICHE"],
+    "VEROES": ["EL GUAYABO", "FARRIAR"]
+  },
+  "ZULIA": {
+    "ALMIRANTE PADILLA": ["ISLA DE TOAS", "MONAGAS"],
+    "BARALT": ["GENERAL URDANETA", "LIBERTADOR", "MANUEL GUANIPA MATOS", "MARCELINO BRICEÑO", "PUEBLO NUEVO", "SAN TIMOTEO"],
+    "CABIMAS": ["AMBROSIO", "ARÍSTIDES CALVANI", "CARMEN HERRERA", "GERMÁN RÍOS LINARES", "JORGE HERNÁNDEZ", "LA ROSA", "PUNTA GORDA", "RÓMULO BETANCOURT", "SAN BENITO"],
+    "CATATUMBO": ["ENCONTRADOS", "UDÓN PÉREZ"],
+    "COLÓN": ["EL MORALITO", "SAN CARLOS DEL ZULIA", "SANTA BÁRBARA", "SANTA CRUZ DEL ZULIA", "URRIBARRÍ"],
+    "FRANCISCO JAVIER PULGAR": ["CARLOS QUEVEDO", "FRANCISCO JAVIER PULGAR", "PUEBLO NUEVO-EL CHIVO", "SIMÓN RODRÍGUEZ"],
+    "GUAJIRA": ["ALTA GUAJIRA", "ELIAS SÁNCHEZ RUBIO", "GUAJIRA", "PÁEZ"],
+    "JESÚS ENRIQUE LOSSADA": ["CONCEPCIÓN", "JOSÉ RAMÓN YÉPEZ", "MARIANO PARRA LEÓN", "SAN JOSÉ"],
+    "JESÚS MARÍA SEMPRÚN": ["CASIGUA-EL CUBO", "JESÚS MARÍA SEMPRÚN"],
+    "LA CAÑADA DE URDANETA": ["ANDRÉS BELLO", "CHIQUINQUIRÁ", "CONCEPCIÓN", "EL CARMELO", "POTRERITOS"],
+    "LAGUNILLAS": ["ALONSO DE OJEDA", "CAMPO LARA", "ELEAZAR LÓPEZ CONTRERAS", "LIBERTADOR", "VENEZUELA"],
+    "MACHIQUES DE PERIJÁ": ["BARTOLOMÉ DE LAS CASAS", "LIBERTAD", "MACHIQUES", "SAN JOSÉ DE PERIJÁ"],
+    "MARA": ["LA SIERRITA", "LAS PARCELAS", "LUIS DE VICENTE", "MONSEÑOR MARCOS SERGIO GODOY", "RICAURTE", "SAN RAFAEL DE EL MOJÁN", "TAMARE"],
+    "MARACAIBO": ["ANTONIO BORJAS ROMERO", "BOLÍVAR", "CACIQUE MARA", "CARACCIOLO PARRA PÉREZ", "CECILIO ACOSTA", "CHIQUINQUIRÁ", "COQUIVACOA", "FRANCISCO EUGENIO BUSTAMANTE", "IDELFONSO VÁSQUEZ", "JUANA DE ÁVILA", "MANUEL DAGNINO", "OLEGARIO VILLALOBOS", "RAÚL LEONI", "SAN ISIDRO", "SANTA LUCÍA", "VENANCIO PULGAR"],
+    "MIRANDA": ["ALTAGRACIA", "ANA MARÍA CAMPOS", "FARÍA", "SAN ANTONIO", "SAN JOSÉ"],
+    "ROSARIO DE PERIJÁ": ["DONALDO GARCÍA", "SIXTO ZAMBRANO", "VILLA DEL ROSARIO"],
+    "SAN FRANCISCO": ["DOMITILA FLORES", "EL BAJO", "FRANCISCO OCHOA", "LOS CORTIJOS", "MARCIAL HERNÁNDEZ", "SAN FRANCISCO"],
+    "SANTA RITA": ["EL MENE", "JOSÉ CENOBIO URRIBARRÍ", "PEDRO LUCAS URRIBARRÍ", "SANTA RITA"],
+    "SUCRE": ["BOBURES", "EL BATEY", "GIBRALTAR", "HERIBERTO ARROYO", "MONSEÑOR ARTURO CELESTINO ÁLVAREZ", "RÓMULO GALLEGOS"],
+    "VALMORE RODRÍGUEZ": ["LA VICTORIA", "RAFAEL URDANETA", "RAÚL CUENCA"]
+  }
+};
+
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,7 +429,7 @@ const App = () => {
     },
     direccion: {
       estado: '', ciudad: '', municipio: '', parroquia: '', urbanizacion: '',
-      sector: '', avenida: '', codigoPostal: '', inmueble: '', piso: '', apto: ''
+      avenida: '', codigoPostal: '', tipoInmueble: 'CASA', inmueble: '', piso: '', apto: '', puntoReferencia: ''
     },
     educacion: {
       niveles: [
@@ -151,7 +537,6 @@ const App = () => {
         if (field === 'fechaNacimiento') {
           newData.datosPersonales.edad = calcularEdad(finalValue);
         }
-        // Si cambia la nacionalidad o la cédula, recalculamos el RIF automáticamente
         if (field === 'nacionalidad' || field === 'cedula') {
           const nac = field === 'nacionalidad' ? finalValue : newData.datosPersonales.nacionalidad;
           const ced = field === 'cedula' ? finalValue : newData.datosPersonales.cedula;
@@ -161,6 +546,21 @@ const App = () => {
       return newData;
     });
     setValidationErrors([]); 
+  };
+
+  const handleAddressChange = (field, value) => {
+    const finalValue = typeof value === 'string' ? value.toUpperCase() : value;
+    setFormData(prev => {
+      const newDir = { ...(prev.direccion || {}), [field]: finalValue };
+      if (field === 'estado') {
+        newDir.municipio = '';
+        newDir.parroquia = '';
+      } else if (field === 'municipio') {
+        newDir.parroquia = '';
+      }
+      return { ...prev, direccion: newDir };
+    });
+    setValidationErrors([]);
   };
 
   const handleNestedInputChange = (section, subSection, field, value) => {
@@ -245,10 +645,13 @@ const App = () => {
       if (!dp.peso) errors.push("Peso");
     } else if (tabIndex === 1) {
       if (!dir.estado) errors.push("Estado");
-      if (!dir.ciudad) errors.push("Ciudad");
       if (!dir.municipio) errors.push("Municipio");
       if (!dir.parroquia) errors.push("Parroquia");
-      if (!dir.avenida) errors.push("Avenida, calle o cruce");
+      if (!dir.ciudad) errors.push("Ciudad");
+      if (!dir.urbanizacion) errors.push("Urbanización o Sector");
+      if (!dir.avenida) errors.push("Avenida o Calle");
+      if (!dir.puntoReferencia) errors.push("Punto de Referencia");
+      if (!dir.codigoPostal || dir.codigoPostal.length !== 4) errors.push("Código Postal (4 dígitos)");
     } else if (tabIndex === 2) {
       if (!ed.estudiaActualmente) errors.push("¿Estudia Act?");
       if (!ed.traslado) errors.push("Traslado al trabajo");
@@ -449,7 +852,11 @@ const App = () => {
     try {
       const response = await fetch('/api/oferta-servicio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
       if (response.ok) { setSubmitStatus('draft'); window.scrollTo(0, 0); } else setSubmitStatus('error');
-    } catch (error) { setSubmitStatus('error'); } finally { setIsSavingDraft(false); }
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSavingDraft(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -460,7 +867,11 @@ const App = () => {
     try {
       const response = await fetch('/api/oferta-servicio', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
       if (response.ok) { setSubmitStatus('success'); window.scrollTo(0, 0); } else setSubmitStatus('error');
-    } catch (error) { setSubmitStatus('error'); } finally { setIsSubmitting(false); }
+    } catch (error) {
+      setSubmitStatus('error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const Req = () => <span className="text-red-500 ml-1" title="Campo obligatorio">*</span>;
@@ -474,6 +885,11 @@ const App = () => {
   const exp = safeData.experiencia || {};
   const hcm = safeData.hcmPolizas || {};
   const declSalud = hcm.declaracionSalud || {};
+
+  // Listas dependientes para dirección
+  const estadosList = Object.keys(VENEZUELA_GEO).sort();
+  const municipiosList = dir.estado ? Object.keys(VENEZUELA_GEO[dir.estado] || {}).sort() : [];
+  const parroquiasList = (dir.estado && dir.municipio) ? (VENEZUELA_GEO[dir.estado]?.[dir.municipio] || []).sort() : [];
 
   // ================= PANTALLAS DE ACCESO (RESPONSIVE) =================
   if (!isAuthenticated) {
@@ -739,25 +1155,104 @@ const App = () => {
               </div>
             </div>
 
-            {/* ================= PESTAÑA 2 ================= */}
+            {/* ================= PESTAÑA 2: DIRECCIÓN EXACTA EN VENEZUELA ================= */}
             <div className={activeTab === 1 ? 'block' : 'hidden'}>
-              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Dirección de Habitación</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.estado || ''} onChange={e => handleInputChange('direccion', 'estado', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.ciudad || ''} onChange={e => handleInputChange('direccion', 'ciudad', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.municipio || ''} onChange={e => handleInputChange('direccion', 'municipio', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.parroquia || ''} onChange={e => handleInputChange('direccion', 'parroquia', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Urbanización</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.urbanizacion || ''} onChange={e => handleInputChange('direccion', 'urbanizacion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Sector</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.sector || ''} onChange={e => handleInputChange('direccion', 'sector', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Avenida, calle o cruce <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.avenida || ''} onChange={e => handleInputChange('direccion', 'avenida', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Código Postal</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.codigoPostal || ''} onChange={e => handleInputChange('direccion', 'codigoPostal', e.target.value)} /></div>
+              <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1 border-b pb-2">Estructura de Dirección Exacta en Venezuela</h3>
+              <p className="text-xs text-gray-500 mb-4">Seleccione su ubicación política (Estado, Municipio, Parroquia) e indique los detalles de su vivienda.</p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Entidad Federal (Estado) <Req/></label>
+                  <select 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium uppercase" 
+                    value={dir.estado || ''} 
+                    onChange={e => handleAddressChange('estado', e.target.value)}
+                  >
+                    <option value="">SELECCIONE ESTADO</option>
+                    {estadosList.map(est => (
+                      <option key={est} value={est}>{est}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label>
+                  <select 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium uppercase disabled:bg-gray-100" 
+                    value={dir.municipio || ''} 
+                    onChange={e => handleAddressChange('municipio', e.target.value)}
+                    disabled={!dir.estado}
+                  >
+                    <option value="">SELECCIONE MUNICIPIO</option>
+                    {municipiosList.map(mun => (
+                      <option key={mun} value={mun}>{mun}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label>
+                  <select 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium uppercase disabled:bg-gray-100" 
+                    value={dir.parroquia || ''} 
+                    onChange={e => handleAddressChange('parroquia', e.target.value)}
+                    disabled={!dir.municipio}
+                  >
+                    <option value="">SELECCIONE PARROQUIA</option>
+                    {parroquiasList.map(par => (
+                      <option key={par} value={par}>{par}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div className="bg-gray-50 p-3 sm:p-4 border rounded-lg">
-                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase">Identificación del Inmueble</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div><input type="text" placeholder="Edf./Res./Casa" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.inmueble || ''} onChange={e => handleInputChange('direccion', 'inmueble', e.target.value)} /></div>
-                  <div><input type="text" placeholder="Piso o Nivel" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.piso || ''} onChange={e => handleInputChange('direccion', 'piso', e.target.value)} /></div>
-                  <div><input type="text" placeholder="Apto. o N°" className="w-full p-2 border rounded text-xs sm:text-sm" value={dir.apto || ''} onChange={e => handleInputChange('direccion', 'apto', e.target.value)} /></div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label>
+                  <input type="text" placeholder="Ej. CARACAS" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.ciudad || ''} onChange={e => handleAddressChange('ciudad', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Urbanización, Barrio o Sector <Req/></label>
+                  <input type="text" placeholder="Ej. URB. LOS PALOS GRANDES" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.urbanizacion || ''} onChange={e => handleAddressChange('urbanizacion', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Vía de Comunicación (Calle/Avenida/Vereda) <Req/></label>
+                  <input type="text" placeholder="Ej. AV. FRANCISCO DE MIRANDA" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.avenida || ''} onChange={e => handleAddressChange('avenida', e.target.value)} />
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 border rounded-lg mb-5">
+                <h4 className="text-xs font-bold text-gray-700 mb-3 uppercase">Identificación de la Vivienda</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Inmueble</label>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase" value={dir.tipoInmueble || 'CASA'} onChange={e => handleAddressChange('tipoInmueble', e.target.value)}>
+                      <option value="CASA">CASA / QUINTA</option>
+                      <option value="EDIFICIO">EDIFICIO / RESIDENCIA</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                      {dir.tipoInmueble === 'EDIFICIO' ? 'Nombre del Edificio / Residencia' : 'Nombre de la Quinta o Nro. de Casa'}
+                    </label>
+                    <input type="text" placeholder={dir.tipoInmueble === 'EDIFICIO' ? 'Ej. RESIDENCIAS EL ÁVILA' : 'Ej. QUINTA MARÍA / CASA NRO. 15'} className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.inmueble || ''} onChange={e => handleAddressChange('inmueble', e.target.value)} />
+                  </div>
+                </div>
+
+                {dir.tipoInmueble === 'EDIFICIO' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 pt-3 border-t">
+                    <div><label className="block text-xs font-medium text-gray-700 mb-1">Número de Piso</label><input type="text" placeholder="Ej. PISO 4" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.piso || ''} onChange={e => handleAddressChange('piso', e.target.value)} /></div>
+                    <div><label className="block text-xs font-medium text-gray-700 mb-1">Número de Apartamento</label><input type="text" placeholder="Ej. APTO. 42" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.apto || ''} onChange={e => handleAddressChange('apto', e.target.value)} /></div>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Punto de Referencia (Obligatorio) <Req/></label>
+                  <input type="text" placeholder="Ej. A media cuadra de la estación de Metro o frente al C.C." className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.puntoReferencia || ''} onChange={e => handleAddressChange('puntoReferencia', e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Código Postal (4 dígitos) <Req/></label>
+                  <input type="text" placeholder="Ej. 1050" maxLength="4" className="w-full p-2 border rounded text-xs sm:text-sm uppercase font-mono" value={dir.codigoPostal || ''} onChange={e => handleAddressChange('codigoPostal', e.target.value.replace(/\D/g, ''))} />
                 </div>
               </div>
             </div>
@@ -1091,9 +1586,9 @@ const App = () => {
                   <div className="mt-4">
                     <label className="block text-xs font-bold text-gray-700 mb-1">Si marcó SÍ en alguna de las opciones anteriores, detalle a continuación la persona, enfermedad y observaciones:</label>
                     <textarea 
-                      className="w-full p-2 border rounded text-xs bg-white" 
+                      className="w-full p-2 border rounded text-xs bg-white uppercase" 
                       rows="3"
-                      placeholder="Describa los detalles médicos..."
+                      placeholder="DESCRIBA LOS DETALLES MÉDICOS..."
                       value={declSalud.detallesEnfermedades || ''}
                       onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', 'detallesEnfermedades', e.target.value)}
                     ></textarea>
