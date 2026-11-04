@@ -1485,22 +1485,14 @@ const App = () => {
                             />
                           </td>
                           <td className="p-1">
-                            <select 
+                            <input 
+                              type="text" 
+                              placeholder={esConDiscapacidad ? 'TAL CUAL CARNET' : 'N/A'} 
                               disabled={!esConDiscapacidad}
-                              className={`w-full p-1.5 border rounded bg-white text-xs uppercase ${esConDiscapacidad && !dep.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
+                              className={`w-full p-1.5 border rounded text-xs uppercase ${esConDiscapacidad && !dep.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
                               value={dep.tipoDiscapacidad || ''} 
-                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'tipoDiscapacidad', e.target.value)}
-                            >
-                              <option value="">SEL TIPO</option>
-                              <option value="FÍSICA">FÍSICA</option>
-                              <option value="SENSORIAL">SENSORIAL</option>
-                              <option value="AUDITIVA">AUDITIVA</option>
-                              <option value="VISUAL">VISUAL</option>
-                              <option value="INTELECTUAL">INTELECTUAL</option>
-                              <option value="PSICOSOCIAL">PSICOSOCIAL</option>
-                              <option value="MÚLTIPLE">MÚLTIPLE</option>
-                              <option value="OTRA">OTRA</option>
-                            </select>
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'tipoDiscapacidad', e.target.value)} 
+                            />
                           </td>
                           <td className="p-1">
                             <input 
@@ -1554,22 +1546,12 @@ const App = () => {
                       <input type="text" placeholder="N° Carnet CONAPDIS" className={`w-full p-2 border rounded text-xs sm:text-sm ${!fs.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} value={fs.carnetConapdis || ''} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} />
                     </div>
                     <div className="sm:col-span-2">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Discapacidad <Req/></label>
-                      <select className={`w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase ${!fs.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.tipoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'tipoDiscapacidad', e.target.value)}>
-                        <option value="">SELECCIONE TIPO</option>
-                        <option value="FÍSICA">FÍSICA</option>
-                        <option value="SENSORIAL">SENSORIAL</option>
-                        <option value="AUDITIVA">AUDITIVA</option>
-                        <option value="VISUAL">VISUAL</option>
-                        <option value="INTELECTUAL">INTELECTUAL</option>
-                        <option value="PSICOSOCIAL">PSICOSOCIAL</option>
-                        <option value="MÚLTIPLE">MÚLTIPLE</option>
-                        <option value="OTRA">OTRA</option>
-                      </select>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Discapacidad (Tal cual carnet) <Req/></label>
+                      <input type="text" placeholder="EJ. FÍSICA, SENSORIAL..." className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.tipoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'tipoDiscapacidad', e.target.value)} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Especifique <Req/></label>
-                      <input type="text" placeholder="Detalle la discapacidad" className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} value={fs.discapacidadDesc || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} />
+                      <input type="text" placeholder="Detalle la condición" className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} value={fs.discapacidadDesc || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Grado <Req/></label>
