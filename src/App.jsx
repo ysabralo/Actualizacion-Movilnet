@@ -387,6 +387,85 @@ const VENEZUELA_GEO = {
   }
 };
 
+// ================= ESTRUCTURA OFICIAL MOVILNET =================
+const MOVILNET_ESTRUCTURA = {
+  unidadesAdscripcion: [
+    "PRESIDENCIA",
+    "VICEPRESIDENCIA DE ADMINISTRACIÓN Y FINANZAS",
+    "VICEPRESIDENCIA DE GRANDES CLIENTES",
+    "VICEPRESIDENCIA DE MERCADEO",
+    "VICEPRESIDENCIA DE ATENCIÓN Y GESTIÓN DEL SERVICIO AL CLIENTE",
+    "VICEPRESIDENCIA DE OPERACIÓN COMERCIAL",
+    "VICEPRESIDENCIA DE TECNOLOGÍA DE INFORMACIÓN",
+    "VICEPRESIDENCIA DE REDES Y OPERACIONES"
+  ],
+  gerenciasGenerales: [
+    "AUDITORÍA INTERNA",
+    "GERENCIA GENERAL DE ENTORNOS Y ESTRATEGIAS",
+    "GERENCIA GENERAL DE ORGANIZACIÓN Y CALIDAD",
+    "GERENCIA GENERAL DE COMUNICACIONES CORPORATIVAS E INSTITUCIONALES",
+    "CONSULTORÍA JURÍDICA",
+    "GERENCIA GENERAL DE GESTIÓN DE TALENTO HUMANO",
+    "GERENCIA GENERAL DE PLANIFICACIÓN Y PRESUPUESTO",
+    "GERENCIA GENERAL DE GESTIÓN DE RIESGO",
+    "GERENCIA GENERAL DE SEGURIDAD DEL DATO",
+    "GERENCIA GENERAL DE SEGURIDAD INTEGRAL",
+    "GERENCIA GENERAL DE LOGÍSTICA E INFRAESTRUCTURA",
+    "GERENCIA GENERAL DE DESPACHO",
+    "GERENCIA GENERAL DE DESARROLLO SOSTENIBLE",
+    "GERENCIA GENERAL DE INNOVACIÓN COMERCIAL",
+    "GERENCIA GENERAL DE GESTIÓN FINANCIERA",
+    "GERENCIA GENERAL DE ADMINISTRACIÓN",
+    "GERENCIA GENERAL DE COMPRAS",
+    "GERENCIA GENERAL DE TESORERÍA",
+    "GERENCIA GENERAL DE VENTAS INSTITUCIONALES",
+    "GERENCIA GENERAL DE VENTAS EMPRESARIALES",
+    "GERENCIA GENERAL DE VENTAS DE PETRÓLEO, ENERGÍA Y MINAS",
+    "GERENCIA GENERAL DE SOPORTE COMERCIAL",
+    "GERENCIA GENERAL DE INTERCONEXIÓN Y SERVICIOS",
+    "GERENCIA GENERAL DE PUBLICIDAD Y MERCADEO",
+    "GERENCIA GENERAL DE OFERTA COMERCIAL Y SEGMENTOS",
+    "GERENCIA GENERAL DE EXPERIENCIA DEL CLIENTE",
+    "GERENCIA GENERAL DE ATENCIÓN INTEGRAL AL CLIENTE",
+    "GERENCIA GENERAL DE GESTIÓN DE INTERACCIÓN E INFORMACIÓN DEL CLIENTE",
+    "GERENCIA GENERAL COMERCIAL CAPITAL",
+    "GERENCIA GENERAL COMERCIAL CENTRO",
+    "GERENCIA GENERAL COMERCIAL CENTRO OCCIDENTE",
+    "GERENCIA GENERAL COMERCIAL GUAYANA",
+    "GERENCIA GENERAL COMERCIAL LOS ANDES",
+    "GERENCIA GENERAL COMERCIAL OCCIDENTE",
+    "GERENCIA GENERAL COMERCIAL ORIENTE",
+    "GERENCIA GENERAL DE DESARROLLO DE CANALES",
+    "GERENCIA GENERAL DE GESTIÓN COMERCIAL",
+    "GERENCIA GENERAL DE DESARROLLO DE SOLUCIONES TI",
+    "GERENCIA GENERAL DE INFRAESTRUCTURA TI",
+    "GERENCIA GENERAL DE LIBERACIÓN E IMPLEMENTACIÓN DE SOLUCIONES TI",
+    "GERENCIA GENERAL DE PLANIFICACIÓN DE PROYECTOS TI",
+    "GERENCIA GENERAL DE SERVICIOS CENTRALIZADOS TI",
+    "GERENCIA GENERAL DE SOPORTE OPERACIONAL TI",
+    "GERENCIA GENERAL CENTRO DE CONTROL Y DESEMPEÑO DE LA RED",
+    "GERENCIA GENERAL DE EXPANSIÓN DE LA RED",
+    "GERENCIA GENERAL DE INGENIERÍA DE LA RED",
+    "GERENCIA GENERAL DE PLANIFICACIÓN DE LA RED",
+    "GERENCIA GENERAL DE OPERACIONES Y MANTENIMIENTO DE LA RED"
+  ],
+  regiones: [
+    "REGIÓN CAPITAL",
+    "REGIÓN CENTRO OCCIDENTE",
+    "REGIÓN CENTRO",
+    "REGIÓN LOS ANDES",
+    "REGIÓN OCCIDENTE",
+    "REGIÓN ORIENTE",
+    "REGIÓN GUAYANA"
+  ],
+  estadosTrabajo: [
+    "DISTRITO CAPITAL", "LARA", "MIRANDA", "CARABOBO", "ARAGUA", "BARINAS", 
+    "MÉRIDA", "TÁCHIRA", "ZULIA", "NUEVA ESPARTA", "GUÁRICO", "PORTUGUESA", 
+    "BOLÍVAR", "FALCÓN", "ANZOÁTEGUI", "TRUJILLO", "AMAZONAS", "APURE", 
+    "MONAGAS", "SUCRE", "COJEDES", "LA GUAIRA", "YARACUY"
+  ]
+};
+
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -637,6 +716,8 @@ const App = () => {
       if (!dp.tlfMovil || dp.tlfMovil.length < 12) errors.push("Teléfono Móvil (Formato 0XXX-XXXXXXX)");
       if (!dp.unidadAdscripcion) errors.push("Unidad de Adscripción");
       if (!dp.gerenciaGeneral) errors.push("Gerencia General");
+      if (!dp.region) errors.push("Región");
+      if (!dp.estadoTrabajo) errors.push("Estado de Trabajo");
       if (!dp.emergenciaNombre1) errors.push("Nombre Contacto Emergencia 1");
       if (!dp.emergenciaTelefono1 || dp.emergenciaTelefono1.length < 12) errors.push("Teléfono Emergencia 1 (Incompleto)");
       if (!dp.emergenciaNombre2) errors.push("Nombre Contacto Emergencia 2");
@@ -1097,13 +1178,48 @@ const App = () => {
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.licencia || ''} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={dp.gradoLicencia || ''} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
               </div>
 
+              {/* ADSCRIPCIÓN Y UBICACIÓN CORPORATIVA CON SELECTS OFICIALES MOVILNET */}
               <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 mb-6">
                 <h4 className="text-xs font-bold text-blue-900 mb-3 uppercase">Adscripción y Ubicación Corporativa (FAS Movilnet)</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Unidad de Adscripción <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.unidadAdscripcion || ''} onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}><option value="">SELECCIONE</option><option value="PRESIDENCIA">PRESIDENCIA</option><option value="VICEPRESIDENCIA">VICEPRESIDENCIA</option></select></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Gerencia General <Req/></label><input type="text" placeholder="Ej. GG GESTION HUMANA" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gerenciaGeneral || ''} onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Región</label><input type="text" placeholder="Ej. CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.region || ''} onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado de Trabajo</label><input type="text" placeholder="Ej. DISTRITO CAPITAL" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.estadoTrabajo || ''} onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)} /></div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Unidad de Adscripción <Req/></label>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.unidadAdscripcion || ''} onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}>
+                      <option value="">SELECCIONE UNIDAD DE ADSCRIPCIÓN</option>
+                      {MOVILNET_ESTRUCTURA.unidadesAdscripcion.map(item => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Gerencia General <Req/></label>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.gerenciaGeneral || ''} onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)}>
+                      <option value="">SELECCIONE GERENCIA GENERAL</option>
+                      {MOVILNET_ESTRUCTURA.gerenciasGenerales.map(item => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Región <Req/></label>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.region || ''} onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)}>
+                      <option value="">SELECCIONE REGIÓN</option>
+                      {MOVILNET_ESTRUCTURA.regiones.map(item => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Estado de Trabajo <Req/></label>
+                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.estadoTrabajo || ''} onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)}>
+                      <option value="">SELECCIONE ESTADO DE TRABAJO</option>
+                      {MOVILNET_ESTRUCTURA.estadosTrabajo.map(item => (
+                        <option key={item} value={item}>{item}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               </div>
 
