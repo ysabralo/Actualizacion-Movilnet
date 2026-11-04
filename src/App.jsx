@@ -525,7 +525,7 @@ const App = () => {
       programas: [{ programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }]
     },
     actividadesFamilia: {
-      dependientes: [{ nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' }],
+      dependientes: [{ nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', viveConUsted: 'SÍ', lugarResidencia: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' }],
       discapacidadPropia: '', carnetConapdis: '', tipoDiscapacidad: '', discapacidadDesc: '', gradoDiscapacidad: '', tomaMedicamento: '', medicamentoCual: '', medicamentoMotivo: ''
     },
     experiencia: {
@@ -534,6 +534,8 @@ const App = () => {
       empresaPrivada: [{ empresa: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' }]
     },
     hcmPolizas: {
+      estaEmbarazada: 'NO',
+      mesesEmbarazo: '',
       familiarMovilnet: 'NO',
       familiarMovilnetParentesco: '',
       tieneOtroSeguro: 'NO',
@@ -748,6 +750,9 @@ const App = () => {
 
       const dependientes = Array.isArray(fs.dependientes) ? fs.dependientes : [];
       dependientes.forEach((dep, idx) => {
+        if (dep.viveConUsted === 'NO' && !dep.lugarResidencia) {
+          errors.push(`Indique la residencia (Estado/Ciudad o fuera del país) para el familiar #${idx + 1}`);
+        }
         const esHijoDiscapacidad = (dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD' || dep.parentesco?.includes('DISCAPACIDAD'));
         if (esHijoDiscapacidad) {
           if (!dep.carnetConapdis) errors.push(`N° Carnet CONAPDIS requerido para el familiar #${idx + 1}`);
@@ -760,6 +765,9 @@ const App = () => {
       if (!exp.esJubilado) errors.push("¿Es jubilado?");
       if (!exp.enProcesoJubilacion) errors.push("¿En proceso de jubilación?");
     } else if (tabIndex === 5) {
+      if (dp.sexo === 'F' && hcm.estaEmbarazada === 'SÍ' && !hcm.mesesEmbarazo) {
+        errors.push("Indique los meses de embarazo");
+      }
       if (hcm.familiarMovilnet === 'SÍ' && !hcm.familiarMovilnetParentesco) {
         errors.push("Indique el parentesco del familiar en Movilnet");
       }
@@ -888,6 +896,8 @@ const App = () => {
       const rawData = data.datos_previos;
       if (!rawData.hcmPolizas) {
         rawData.hcmPolizas = {
+          estaEmbarazada: 'NO',
+          mesesEmbarazo: '',
           familiarMovilnet: 'NO',
           familiarMovilnetParentesco: '',
           tieneOtroSeguro: 'NO',
@@ -1433,23 +1443,25 @@ const App = () => {
             <div className={activeTab === 3 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">Carga Familiar</h3>
-                <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
+                <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', viveConUsted: 'SÍ', lugarResidencia: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
                   <Plus size={16} className="mr-1"/> Añadir Familiar
                 </button>
               </div>
               <div className="overflow-x-auto mb-8 border rounded-lg">
-                <table className="w-full text-xs text-left bg-white min-w-[950px]">
+                <table className="w-full text-xs text-left bg-white min-w-[1100px]">
                   <thead className="bg-gray-100 border-b">
                     <tr>
                       <th className="p-2 w-1/5">Apellidos y Nombres</th>
-                      <th className="p-2 w-28">Cédula</th>
-                      <th className="p-2 w-28">F. Nacimiento</th>
-                      <th className="p-2 w-14">Edad</th>
-                      <th className="p-2 w-36">Parentesco <Req/></th>
-                      <th className="p-2 w-28">N° Carnet CONAPDIS</th>
-                      <th className="p-2 w-32">Tipo Discapacidad</th>
+                      <th className="p-2 w-24">Cédula</th>
+                      <th className="p-2 w-24">F. Nacimiento</th>
+                      <th className="p-2 w-12">Edad</th>
+                      <th className="p-2 w-32">Parentesco <Req/></th>
+                      <th className="p-2 w-24">¿Vive con Ud.? <Req/></th>
+                      <th className="p-2 w-36">Estado/Ciudad o Fuera (si no vive)</th>
+                      <th className="p-2 w-24">N° CONAPDIS</th>
+                      <th className="p-2 w-28">Tipo Discapacidad</th>
                       <th className="p-2 w-28">Especifique</th>
-                      <th className="p-2 w-28">Grado</th>
+                      <th className="p-2 w-24">Grado</th>
                       <th className="p-2 w-10 text-center">X</th>
                     </tr>
                   </thead>
@@ -1473,6 +1485,22 @@ const App = () => {
                               <option value="HIJO CON DISCAPACIDAD">HIJO CON DISCAPACIDAD</option>
                               <option value="HIJA CON DISCAPACIDAD">HIJA CON DISCAPACIDAD</option>
                             </select>
+                          </td>
+                          <td className="p-1">
+                            <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.viveConUsted || 'SÍ'} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'viveConUsted', e.target.value)}>
+                              <option value="SÍ">SÍ</option>
+                              <option value="NO">NO</option>
+                            </select>
+                          </td>
+                          <td className="p-1">
+                            <input 
+                              type="text" 
+                              placeholder={dep.viveConUsted === 'NO' ? 'ESTADO/CIUDAD O FUERA' : 'N/A'} 
+                              disabled={dep.viveConUsted === 'SÍ'}
+                              className={`w-full p-1.5 border rounded text-xs uppercase ${dep.viveConUsted === 'NO' && !dep.lugarResidencia ? 'border-red-500 bg-red-50' : ''} ${dep.viveConUsted === 'SÍ' ? 'bg-gray-100' : ''}`} 
+                              value={dep.lugarResidencia || ''} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'lugarResidencia', e.target.value)} 
+                            />
                           </td>
                           <td className="p-1">
                             <input 
@@ -1629,6 +1657,26 @@ const App = () => {
                 <ShieldPlus className="text-blue-600" size={20} /> Fondo Administrado de Salud (HCM) y Pólizas
               </h3>
               <p className="text-xs text-gray-500 mb-6">Información institucional complementaria para la afiliación al fondo de salud de Movilnet[cite: 5, 6].</p>
+
+              {/* Pregunta embarazo si es Femenino */}
+              {dp.sexo === 'F' && (
+                <div className="bg-pink-50 p-4 rounded-lg border border-pink-100 mb-6">
+                  <label className="block text-xs font-bold text-pink-900 mb-2 uppercase">¿Está usted actualmente embarazada? <Req/></label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={hcm.estaEmbarazada || 'NO'} onChange={e => handleInputChange('hcmPolizas', 'estaEmbarazada', e.target.value)}>
+                        <option value="NO">NO</option>
+                        <option value="SÍ">SÍ</option>
+                      </select>
+                    </div>
+                    {hcm.estaEmbarazada === 'SÍ' && (
+                      <div>
+                        <input type="number" placeholder="¿Cuántos meses de embarazo tiene?" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={hcm.mesesEmbarazo || ''} onChange={e => handleInputChange('hcmPolizas', 'mesesEmbarazo', e.target.value)} required />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Pregunta familiar en Movilnet */}
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
