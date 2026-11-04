@@ -648,7 +648,7 @@ const App = () => {
       if (!dir.municipio) errors.push("Municipio");
       if (!dir.parroquia) errors.push("Parroquia");
       if (!dir.ciudad) errors.push("Ciudad");
-      if (!dir.urbanizacion) errors.push("Urbanización o Sector");
+      if (!dir.urbanizacion) errors.push("Urbanización, Conjunto Residencial, Barrio o Sector");
       if (!dir.avenida) errors.push("Avenida o Calle");
       if (!dir.puntoReferencia) errors.push("Punto de Referencia");
       if (!dir.codigoPostal || dir.codigoPostal.length !== 4) errors.push("Código Postal (4 dígitos)");
@@ -1210,8 +1210,8 @@ const App = () => {
                   <input type="text" placeholder="Ej. CARACAS" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.ciudad || ''} onChange={e => handleAddressChange('ciudad', e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">Urbanización, Barrio o Sector <Req/></label>
-                  <input type="text" placeholder="Ej. URB. LOS PALOS GRANDES" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.urbanizacion || ''} onChange={e => handleAddressChange('urbanizacion', e.target.value)} />
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Urbanización, Conjunto Residencial, Barrio o Sector <Req/></label>
+                  <input type="text" placeholder="Ej. URB. LOS PALOS GRANDES / C.R. EL ÁVILA" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.urbanizacion || ''} onChange={e => handleAddressChange('urbanizacion', e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Vía de Comunicación (Calle/Avenida/Vereda) <Req/></label>
