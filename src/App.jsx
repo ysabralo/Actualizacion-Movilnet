@@ -525,8 +525,8 @@ const App = () => {
       programas: [{ programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }, { programa: '', nivelDominio: '' }]
     },
     actividadesFamilia: {
-      dependientes: [{ nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', discapacidad: '' }],
-      discapacidadPropia: '', discapacidadDesc: '', carnetConapdis: '', tomaMedicamento: '', medicamentoCual: '', medicamentoMotivo: ''
+      dependientes: [{ nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' }],
+      discapacidadPropia: '', carnetConapdis: '', tipoDiscapacidad: '', discapacidadDesc: '', gradoDiscapacidad: '', tomaMedicamento: '', medicamentoCual: '', medicamentoMotivo: ''
     },
     experiencia: {
       adminPublica: [{ organismo: '', direccion: '', telefono: '', cargo: '', ingreso: '', egreso: '', motivo: '' }],
@@ -739,15 +739,21 @@ const App = () => {
     } else if (tabIndex === 3) {
       if (!fs.discapacidadPropia) errors.push("¿Posee discapacidad?");
       if (fs.discapacidadPropia === 'SÍ') {
-        if (!fs.discapacidadDesc) errors.push("Especifique discapacidad propia");
         if (!fs.carnetConapdis) errors.push("N° de Carnet CONAPDIS propio");
+        if (!fs.tipoDiscapacidad) errors.push("Tipo de Discapacidad propia");
+        if (!fs.discapacidadDesc) errors.push("Especifique discapacidad propia");
+        if (!fs.gradoDiscapacidad) errors.push("Grado de discapacidad propio");
       }
       if (!fs.tomaMedicamento) errors.push("¿Toma medicamento?");
 
       const dependientes = Array.isArray(fs.dependientes) ? fs.dependientes : [];
       dependientes.forEach((dep, idx) => {
-        if ((dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') && !dep.discapacidad) {
-          errors.push(`N° Carnet CONAPDIS requerido para el familiar #${idx + 1} (${dep.parentesco})`);
+        const esHijoDiscapacidad = (dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD' || dep.parentesco?.includes('DISCAPACIDAD'));
+        if (esHijoDiscapacidad) {
+          if (!dep.carnetConapdis) errors.push(`N° Carnet CONAPDIS requerido para el familiar #${idx + 1}`);
+          if (!dep.tipoDiscapacidad) errors.push(`Tipo de Discapacidad requerido para el familiar #${idx + 1}`);
+          if (!dep.especifique) errors.push(`Especifique requerido para el familiar #${idx + 1}`);
+          if (!dep.grado) errors.push(`Grado requerido para el familiar #${idx + 1}`);
         }
       });
     } else if (tabIndex === 4) {
@@ -1423,58 +1429,108 @@ const App = () => {
               </div>
             </div>
 
-            {/* ================= PESTAÑA 4 ================= */}
+            {/* ================= PESTAÑA 4: CARGA FAMILIAR Y DISCAPACIDAD ================= */}
             <div className={activeTab === 3 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800">Carga Familiar</h3>
-                <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', discapacidad: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
+                <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
                   <Plus size={16} className="mr-1"/> Añadir Familiar
                 </button>
               </div>
               <div className="overflow-x-auto mb-8 border rounded-lg">
-                <table className="w-full text-xs text-left bg-white min-w-[700px]">
+                <table className="w-full text-xs text-left bg-white min-w-[950px]">
                   <thead className="bg-gray-100 border-b">
                     <tr>
-                      <th className="p-2 w-1/4">Apellidos y Nombres</th>
-                      <th className="p-2">Cédula</th>
-                      <th className="p-2">F. Nacimiento</th>
-                      <th className="p-2 w-16">Edad</th>
-                      <th className="p-2 w-40">Parentesco <Req/></th>
-                      <th className="p-2">N° Carnet CONAPDIS</th>
+                      <th className="p-2 w-1/5">Apellidos y Nombres</th>
+                      <th className="p-2 w-28">Cédula</th>
+                      <th className="p-2 w-28">F. Nacimiento</th>
+                      <th className="p-2 w-14">Edad</th>
+                      <th className="p-2 w-36">Parentesco <Req/></th>
+                      <th className="p-2 w-28">N° Carnet CONAPDIS</th>
+                      <th className="p-2 w-32">Tipo Discapacidad</th>
+                      <th className="p-2 w-28">Especifique</th>
+                      <th className="p-2 w-28">Grado</th>
                       <th className="p-2 w-10 text-center">X</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {(fs.dependientes || []).map((dep, idx) => (
-                      <tr key={idx} className="border-b hover:bg-gray-50">
-                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.nombres || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
-                        <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.cedula || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
-                        <td className="p-1"><input type="date" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
-                        <td className="p-1"><input type="number" readOnly placeholder="Auto." className="w-full p-1.5 border rounded bg-gray-100 text-gray-600 text-xs" value={dep.edad || ''} /></td>
-                        <td className="p-1">
-                          <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.parentesco || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)}>
-                            <option value="">SELECCIONE</option>
-                            <option value="CÓNYUGE">CÓNYUGE</option>
-                            <option value="PADRE">PADRE</option>
-                            <option value="MADRE">MADRE</option>
-                            <option value="HIJO">HIJO</option>
-                            <option value="HIJA">HIJA</option>
-                            <option value="HIJO CON DISCAPACIDAD">HIJO CON DISCAPACIDAD</option>
-                            <option value="HIJA CON DISCAPACIDAD">HIJA CON DISCAPACIDAD</option>
-                          </select>
-                        </td>
-                        <td className="p-1">
-                          <input 
-                            type="text" 
-                            placeholder={(dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') ? 'OBLIGATORIO CONAPDIS' : 'Opcional'} 
-                            className={`w-full p-1.5 border rounded text-xs ${(dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD') && !dep.discapacidad ? 'border-red-500 bg-red-50' : ''}`} 
-                            value={dep.discapacidad || ''} 
-                            onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'discapacidad', e.target.value)} 
-                          />
-                        </td>
-                        <td className="p-1 text-center"><button type="button" onClick={() => removeRow('actividadesFamilia', 'dependientes', idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded"><Trash2 size={14} /></button></td>
-                      </tr>
-                    ))}
+                    {(fs.dependientes || []).map((dep, idx) => {
+                      const esConDiscapacidad = (dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD' || dep.parentesco?.includes('DISCAPACIDAD'));
+                      return (
+                        <tr key={idx} className="border-b hover:bg-gray-50">
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.nombres || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.cedula || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
+                          <td className="p-1"><input type="date" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
+                          <td className="p-1"><input type="number" readOnly placeholder="Auto." className="w-full p-1.5 border rounded bg-gray-100 text-gray-600 text-xs" value={dep.edad || ''} /></td>
+                          <td className="p-1">
+                            <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.parentesco || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)}>
+                              <option value="">SELECCIONE</option>
+                              <option value="CÓNYUGE">CÓNYUGE</option>
+                              <option value="PADRE">PADRE</option>
+                              <option value="MADRE">MADRE</option>
+                              <option value="HIJO">HIJO</option>
+                              <option value="HIJA">HIJA</option>
+                              <option value="HIJO CON DISCAPACIDAD">HIJO CON DISCAPACIDAD</option>
+                              <option value="HIJA CON DISCAPACIDAD">HIJA CON DISCAPACIDAD</option>
+                            </select>
+                          </td>
+                          <td className="p-1">
+                            <input 
+                              type="text" 
+                              placeholder={esConDiscapacidad ? 'OBLIGATORIO' : 'N/A'} 
+                              disabled={!esConDiscapacidad}
+                              className={`w-full p-1.5 border rounded text-xs ${esConDiscapacidad && !dep.carnetConapdis ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
+                              value={dep.carnetConapdis || ''} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'carnetConapdis', e.target.value)} 
+                            />
+                          </td>
+                          <td className="p-1">
+                            <select 
+                              disabled={!esConDiscapacidad}
+                              className={`w-full p-1.5 border rounded bg-white text-xs uppercase ${esConDiscapacidad && !dep.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
+                              value={dep.tipoDiscapacidad || ''} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'tipoDiscapacidad', e.target.value)}
+                            >
+                              <option value="">SEL TIPO</option>
+                              <option value="FÍSICA">FÍSICA</option>
+                              <option value="SENSORIAL">SENSORIAL</option>
+                              <option value="AUDITIVA">AUDITIVA</option>
+                              <option value="VISUAL">VISUAL</option>
+                              <option value="INTELECTUAL">INTELECTUAL</option>
+                              <option value="PSICOSOCIAL">PSICOSOCIAL</option>
+                              <option value="MÚLTIPLE">MÚLTIPLE</option>
+                              <option value="OTRA">OTRA</option>
+                            </select>
+                          </td>
+                          <td className="p-1">
+                            <input 
+                              type="text" 
+                              placeholder={esConDiscapacidad ? 'ESPECIFIQUE' : 'N/A'} 
+                              disabled={!esConDiscapacidad}
+                              className={`w-full p-1.5 border rounded text-xs ${esConDiscapacidad && !dep.especifique ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
+                              value={dep.especifique || ''} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'especifique', e.target.value)} 
+                            />
+                          </td>
+                          <td className="p-1">
+                            <select 
+                              disabled={!esConDiscapacidad}
+                              className={`w-full p-1.5 border rounded bg-white text-xs uppercase ${esConDiscapacidad && !dep.grado ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
+                              value={dep.grado || ''} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'grado', e.target.value)}
+                            >
+                              <option value="">SEL GRADO</option>
+                              <option value="LEVE">LEVE</option>
+                              <option value="MODERADO">MODERADO</option>
+                              <option value="SEVERO">SEVERO</option>
+                              <option value="GRAVE">GRAVE</option>
+                              <option value="MUY GRAVE">MUY GRAVE</option>
+                            </select>
+                          </td>
+                          <td className="p-1 text-center"><button type="button" onClick={() => removeRow('actividadesFamilia', 'dependientes', idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded"><Trash2 size={14} /></button></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -1483,38 +1539,54 @@ const App = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">
-                    ¿Posee discapacidad? <Req/> {fs.discapacidadPropia === 'SÍ' && <Req/>} / Especifique
+                    ¿Posee discapacidad? <Req/> {fs.discapacidadPropia === 'SÍ' && <Req/>}
                   </label>
-                  <div className="flex gap-2">
-                    <select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={fs.discapacidadPropia || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}>
-                      <option value="">NO/SÍ</option>
-                      <option value="SÍ">SÍ</option>
-                      <option value="NO">NO</option>
-                    </select>
-                    <input 
-                      type="text" 
-                      placeholder={fs.discapacidadPropia === 'SÍ' ? 'Obligatorio' : 'Especifique'} 
-                      className={`w-2/3 sm:w-3/4 p-2 border rounded text-xs ${fs.discapacidadPropia === 'SÍ' && !fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} 
-                      value={fs.discapacidadDesc || ''} 
-                      onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} 
-                    />
-                  </div>
+                  <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={fs.discapacidadPropia || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}>
+                    <option value="">NO / SÍ</option>
+                    <option value="SÍ">SÍ</option>
+                    <option value="NO">NO</option>
+                  </select>
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Indique el N° de Carnet CONAPDIS {fs.discapacidadPropia === 'SÍ' && <Req/>}
-                  </label>
-                  <input 
-                    type="text" 
-                    placeholder={fs.discapacidadPropia === 'SÍ' ? 'Obligatorio CONAPDIS' : 'N° CONAPDIS'} 
-                    className={`w-full p-2 border rounded text-xs sm:text-sm ${fs.discapacidadPropia === 'SÍ' && !fs.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} 
-                    value={fs.carnetConapdis || ''} 
-                    onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} 
-                  />
-                </div>
+                {fs.discapacidadPropia === 'SÍ' && (
+                  <>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">N° de Carnet CONAPDIS <Req/></label>
+                      <input type="text" placeholder="N° Carnet CONAPDIS" className={`w-full p-2 border rounded text-xs sm:text-sm ${!fs.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} value={fs.carnetConapdis || ''} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Discapacidad <Req/></label>
+                      <select className={`w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase ${!fs.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.tipoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'tipoDiscapacidad', e.target.value)}>
+                        <option value="">SELECCIONE TIPO</option>
+                        <option value="FÍSICA">FÍSICA</option>
+                        <option value="SENSORIAL">SENSORIAL</option>
+                        <option value="AUDITIVA">AUDITIVA</option>
+                        <option value="VISUAL">VISUAL</option>
+                        <option value="INTELECTUAL">INTELECTUAL</option>
+                        <option value="PSICOSOCIAL">PSICOSOCIAL</option>
+                        <option value="MÚLTIPLE">MÚLTIPLE</option>
+                        <option value="OTRA">OTRA</option>
+                      </select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Especifique <Req/></label>
+                      <input type="text" placeholder="Detalle la discapacidad" className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} value={fs.discapacidadDesc || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Grado <Req/></label>
+                      <select className={`w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase ${!fs.gradoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.gradoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'gradoDiscapacidad', e.target.value)}>
+                        <option value="">SELECCIONE GRADO</option>
+                        <option value="LEVE">LEVE</option>
+                        <option value="MODERADO">MODERADO</option>
+                        <option value="SEVERO">SEVERO</option>
+                        <option value="GRAVE">GRAVE</option>
+                        <option value="MUY GRAVE">MUY GRAVE</option>
+                      </select>
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 border-t pt-4">
                 <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={fs.tomaMedicamento || ''} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={fs.medicamentoCual || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
                 <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={fs.medicamentoMotivo || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
               </div>
