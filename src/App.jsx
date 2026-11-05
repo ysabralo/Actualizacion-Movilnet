@@ -1165,11 +1165,11 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.nacionalidad || ''} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">RIF (Calculado Automáticamente) <Req/></label>
                   <input type="text" className="w-full p-2 border rounded bg-gray-100 text-gray-800 font-bold text-xs sm:text-sm" value={dp.rif || ''} readOnly title="Calculado automáticamente por módulo 11" />
                 </div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.nacionalidad || ''} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
                 <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gaceta || ''} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
               </div>
 
