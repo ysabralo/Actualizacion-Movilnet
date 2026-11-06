@@ -708,8 +708,8 @@ const App = () => {
     const hcm = data.hcmPolizas || {};
 
     if (tabIndex === 0) {
-      if (!dp.rif) errors.push("RIF");
       if (!dp.nacionalidad) errors.push("Nacionalidad");
+      if (!dp.rif) errors.push("RIF");
       if (!dp.lugarNacimiento) errors.push("Lugar de Nacimiento");
       if (!dp.fechaNacimiento) errors.push("Fecha de Nacimiento");
       if (!dp.sexo) errors.push("Sexo");
@@ -991,7 +991,7 @@ const App = () => {
   // ================= PANTALLAS DE ACCESO (RESPONSIVE) =================
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-3 sm:p-6">
+      <div className="min-h-screen bg-gray-100 flex flex-col justify-center items-center p-3 sm:p-6 notranslate" translate="no">
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md overflow-hidden">
           <div className="bg-blue-900 text-white p-5 sm:p-6 text-center">
             <h1 className="text-xl sm:text-2xl font-bold">Movilnet C.A.</h1>
@@ -1000,14 +1000,14 @@ const App = () => {
 
           <>
             {loginStep === 'login' && (
-              <form onSubmit={handleLoginClave} className="p-6 sm:p-8">
+              <form onSubmit={handleLoginClave} autoComplete="off" className="p-6 sm:p-8">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
                 
                 <div className="mb-4">
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Ej. 12345678" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Ej. 12345678" autoComplete="off" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={loginCedula} onChange={(e) => setLoginCedula(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
@@ -1015,7 +1015,7 @@ const App = () => {
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Key className="h-5 w-5 text-gray-400" /></div>
-                    <input type="password" placeholder="Tu clave de acceso" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
+                    <input type="password" placeholder="Tu clave de acceso" autoComplete="new-password" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
                   </div>
                 </div>
 
@@ -1034,7 +1034,7 @@ const App = () => {
             )}
 
             {loginStep === 'verifyFirst' && (
-              <form onSubmit={handleVerifySap} className="p-6 sm:p-8">
+              <form onSubmit={handleVerifySap} autoComplete="off" className="p-6 sm:p-8">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 text-center">Primer Ingreso - Validación SAP</h3>
                 <p className="text-xs text-gray-500 mb-6 text-center">Ingrese sus datos de empleado para autenticar su identidad.</p>
                 
@@ -1042,7 +1042,7 @@ const App = () => {
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Ej. P0012345" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Ej. 2XXXXX" autoComplete="off" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
@@ -1050,7 +1050,7 @@ const App = () => {
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Cédula de Identidad</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><CreditCard className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Cédula registrada en SAP" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Cédula registrada en SAP" autoComplete="off" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={cedulaInput} onChange={(e) => setCedulaInput(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
@@ -1058,7 +1058,7 @@ const App = () => {
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Fecha de Nacimiento</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Calendar className="h-5 w-5 text-gray-400" /></div>
-                    <input type="date" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700 text-sm" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
+                    <input type="date" autoComplete="off" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-gray-700 text-sm" value={fechaNacimientoInput} onChange={(e) => setFechaNacimientoInput(e.target.value)} required />
                   </div>
                 </div>
 
@@ -1077,18 +1077,18 @@ const App = () => {
             )}
 
             {loginStep === 'createPassword' && (
-              <form onSubmit={handleCreatePassword} className="p-6 sm:p-8">
+              <form onSubmit={handleCreatePassword} autoComplete="off" className="p-6 sm:p-8">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 text-center">Crea tu Clave Personal</h3>
                 <p className="text-xs text-gray-500 mb-6 text-center">Esta clave te servirá para ingresar en tus próximas visitas sin necesidad de validar tus datos de SAP.</p>
                 
                 <div className="mb-4">
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
-                  <input type="password" placeholder="Mínimo 4 caracteres" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                  <input type="password" placeholder="Mínimo 4 caracteres" autoComplete="new-password" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
                 </div>
 
                 <div className="mb-6">
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
-                  <input type="password" placeholder="Repite tu clave" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                  <input type="password" placeholder="Repite tu clave" autoComplete="new-password" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
                 </div>
 
                 {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs sm:text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
@@ -1107,7 +1107,7 @@ const App = () => {
 
   // ================= PANTALLA PRINCIPAL (FORMULARIO ADAPTABLE) =================
   return (
-    <div className="min-h-screen bg-gray-100 text-left pb-12 font-sans">
+    <div className="min-h-screen bg-gray-100 text-left pb-12 font-sans notranslate" translate="no">
       <header className="bg-blue-900 text-white p-4 sm:p-5 shadow-md sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
           <div>
@@ -1154,9 +1154,9 @@ const App = () => {
             ))}
           </div>
 
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6 md:p-8">
+          <form onSubmit={handleSubmit} autoComplete="off" className="p-4 sm:p-6 md:p-8">
             
-            {/* ================= PESTAÑA 1 ================= */}
+            {/* ================= PESTAÑA 1: DATOS PERSONALES ================= */}
             <div className={activeTab === 0 ? 'block' : 'hidden'}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-8 bg-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100">
                 <div><label className="block text-xs font-bold text-gray-700 mb-1">Cédula de Identidad</label><input type="text" value={dp.cedula || ''} disabled className="w-full p-2 border rounded bg-gray-200 text-gray-700 text-xs sm:text-sm" /></div>
@@ -1165,33 +1165,112 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.nacionalidad || ''} onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}><option value="">SELECCIONE</option><option value="V">V</option><option value="E">E</option></select></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Nacionalidad <Req/></label>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={dp.nacionalidad || ''} 
+                    onChange={e => handleInputChange('datosPersonales', 'nacionalidad', e.target.value)}
+                  >
+                    <option value="">SELECCIONE</option>
+                    <option value="V">V</option>
+                    <option value="E">E</option>
+                  </select>
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">RIF (Calculado Automáticamente) <Req/></label>
                   <input type="text" className="w-full p-2 border rounded bg-gray-100 text-gray-800 font-bold text-xs sm:text-sm" value={dp.rif || ''} readOnly title="Calculado automáticamente por módulo 11" />
                 </div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gaceta || ''} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} /></div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Si es naturalizado indique Gaceta</label>
+                  <input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.gaceta || ''} onChange={e => handleInputChange('datosPersonales', 'gaceta', e.target.value)} />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.lugarNacimiento || ''} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.fechaNacimiento || ''} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Lugar de Nacimiento <Req/></label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.lugarNacimiento || ''} onChange={e => handleInputChange('datosPersonales', 'lugarNacimiento', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Fecha de Nacimiento <Req/></label><input type="date" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.fechaNacimiento || ''} onChange={e => handleInputChange('datosPersonales', 'fechaNacimiento', e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-2">
                   <div><label className="block text-xs font-medium text-gray-700 mb-1">Edad <Req/></label><input type="number" readOnly placeholder="Autocalc." className="w-full p-2 border rounded bg-gray-100 text-gray-600 text-xs sm:text-sm" value={dp.edad || ''} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.sexo || ''} onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Sexo <Req/></label>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                      value={dp.sexo || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'sexo', e.target.value)}
+                    >
+                      <option value="">SEL</option>
+                      <option value="M">M</option>
+                      <option value="F">F</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Grupo Sanguíneo</label>
-                  <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.grupoSanguineo || ''} onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}>
-                    <option value="">SELECCIONE</option><option value="O+">O+</option><option value="O-">O-</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={dp.grupoSanguineo || ''} 
+                    onChange={e => handleInputChange('datosPersonales', 'grupoSanguineo', e.target.value)}
+                  >
+                    <option value="">SELECCIONE</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
                   </select>
                 </div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.estadoCivil || ''} onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}><option value="">SELECCIONE</option><option value="SOLTERO">SOLTERO</option><option value="CASADO">CASADO</option><option value="VIUDO">VIUDO</option><option value="DIVORCIADO">DIVORCIADO</option><option value="CONCUBINO">CONCUBINO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.habilidadMotriz || ''} onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}><option value="">SELECCIONE</option><option value="DIESTRO">DIESTRO</option><option value="ZURDO">ZURDO</option><option value="AMBIDIESTRO">AMBIDIESTRO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label><div className="flex gap-2"><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.licencia || ''} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} /><input type="text" placeholder="Grado" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={dp.gradoLicencia || ''} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} /></div></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Estado Civil <Req/></label>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={dp.estadoCivil || ''} 
+                    onChange={e => handleInputChange('datosPersonales', 'estadoCivil', e.target.value)}
+                  >
+                    <option value="">SELECCIONE</option>
+                    <option value="SOLTERO">SOLTERO</option>
+                    <option value="CASADO">CASADO</option>
+                    <option value="VIUDO">VIUDO</option>
+                    <option value="DIVORCIADO">DIVORCIADO</option>
+                    <option value="CONCUBINO">CONCUBINO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Habilidad Motriz</label>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={dp.habilidadMotriz || ''} 
+                    onChange={e => handleInputChange('datosPersonales', 'habilidadMotriz', e.target.value)}
+                  >
+                    <option value="">SELECCIONE</option>
+                    <option value="DIESTRO">DIESTRO</option>
+                    <option value="ZURDO">ZURDO</option>
+                    <option value="AMBIDIESTRO">AMBIDIESTRO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Licencia de Conducir / Grado</label>
+                  <div className="flex gap-2">
+                    <input type="text" placeholder="Nro" autoComplete="off" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.licencia || ''} onChange={e => handleInputChange('datosPersonales', 'licencia', e.target.value)} />
+                    <input type="text" placeholder="Grado" autoComplete="off" className="w-1/3 p-2 border rounded text-xs sm:text-sm" value={dp.gradoLicencia || ''} onChange={e => handleInputChange('datosPersonales', 'gradoLicencia', e.target.value)} />
+                  </div>
+                </div>
               </div>
 
               {/* ADSCRIPCIÓN Y UBICACIÓN CORPORATIVA CON SELECTS OFICIALES MOVILNET */}
@@ -1200,7 +1279,13 @@ const App = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Unidad de Adscripción <Req/></label>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.unidadAdscripcion || ''} onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" 
+                      value={dp.unidadAdscripcion || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'unidadAdscripcion', e.target.value)}
+                    >
                       <option value="">SELECCIONE UNIDAD DE ADSCRIPCIÓN</option>
                       {MOVILNET_ESTRUCTURA.unidadesAdscripcion.map(item => (
                         <option key={item} value={item}>{item}</option>
@@ -1209,7 +1294,13 @@ const App = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Gerencia General <Req/></label>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.gerenciaGeneral || ''} onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)}>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" 
+                      value={dp.gerenciaGeneral || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'gerenciaGeneral', e.target.value)}
+                    >
                       <option value="">SELECCIONE GERENCIA GENERAL</option>
                       {MOVILNET_ESTRUCTURA.gerenciasGenerales.map(item => (
                         <option key={item} value={item}>{item}</option>
@@ -1220,7 +1311,13 @@ const App = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Región <Req/></label>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.region || ''} onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)}>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" 
+                      value={dp.region || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'region', e.target.value)}
+                    >
                       <option value="">SELECCIONE REGIÓN</option>
                       {MOVILNET_ESTRUCTURA.regiones.map(item => (
                         <option key={item} value={item}>{item}</option>
@@ -1229,7 +1326,13 @@ const App = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Estado de Trabajo <Req/></label>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" value={dp.estadoTrabajo || ''} onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)}>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium" 
+                      value={dp.estadoTrabajo || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'estadoTrabajo', e.target.value)}
+                    >
                       <option value="">SELECCIONE ESTADO DE TRABAJO</option>
                       {MOVILNET_ESTRUCTURA.estadosTrabajo.map(item => (
                         <option key={item} value={item}>{item}</option>
@@ -1240,49 +1343,181 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.tipoVivienda || ''} onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="CASA">CASA</option><option value="APARTAMENTO">APARTAMENTO</option><option value="QUINTA">QUINTA</option><option value="OTRO">OTRO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={dp.condicionVivienda || ''} onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}><option value="">SELECCIONE</option><option value="PROPIA">PROPIA</option><option value="ALQUILADA">ALQUILADA</option><option value="FAMILIAR">FAMILIAR</option><option value="OTRA">OTRA</option></select></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={dp.alergico || ''} onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Especifique si aplica" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.alergiaDesc || ''} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} /></div></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Vivienda</label>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={dp.tipoVivienda || ''} 
+                    onChange={e => handleInputChange('datosPersonales', 'tipoVivienda', e.target.value)}
+                  >
+                    <option value="">SELECCIONE</option>
+                    <option value="CASA">CASA</option>
+                    <option value="APARTAMENTO">APARTAMENTO</option>
+                    <option value="QUINTA">QUINTA</option>
+                    <option value="OTRO">OTRO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Condición Vivienda</label>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={dp.condicionVivienda || ''} 
+                    onChange={e => handleInputChange('datosPersonales', 'condicionVivienda', e.target.value)}
+                  >
+                    <option value="">SELECCIONE</option>
+                    <option value="PROPIA">PROPIA</option>
+                    <option value="ALQUILADA">ALQUILADA</option>
+                    <option value="FAMILIAR">FAMILIAR</option>
+                    <option value="OTRA">OTRA</option>
+                  </select>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿Es Ud. Alérgico? / Indique</label>
+                  <div className="flex gap-2">
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" 
+                      value={dp.alergico || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'alergico', e.target.value)}
+                    >
+                      <option value="">NO / SÍ</option>
+                      <option value="SÍ">SÍ</option>
+                      <option value="NO">NO</option>
+                    </select>
+                    <input type="text" placeholder="Especifique si aplica" autoComplete="off" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.alergiaDesc || ''} onChange={e => handleInputChange('datosPersonales', 'alergiaDesc', e.target.value)} />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 border-t pt-4">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.profesion || ''} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ocupación Específica</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.ocupacion || ''} onChange={e => handleInputChange('datosPersonales', 'ocupacion', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={dp.colegiado || ''} onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroColegiado || ''} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} /></div></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Profesión u Oficio</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.profesion || ''} onChange={e => handleInputChange('datosPersonales', 'profesion', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Ocupación Específica</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.ocupacion || ''} onChange={e => handleInputChange('datosPersonales', 'ocupacion', e.target.value)} /></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿Está Ud. Colegiado? / Nro</label>
+                  <div className="flex gap-2">
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" 
+                      value={dp.colegiado || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'colegiado', e.target.value)}
+                    >
+                      <option value="">NO / SÍ</option>
+                      <option value="SÍ">SÍ</option>
+                      <option value="NO">NO</option>
+                    </select>
+                    <input type="text" placeholder="Nro" autoComplete="off" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroColegiado || ''} onChange={e => handleInputChange('datosPersonales', 'nroColegiado', e.target.value)} />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" className="w-full p-2 border rounded lowercase text-xs sm:text-sm" value={dp.correo || ''} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfMovil || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfLocal || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" autoComplete="off" className="w-full p-2 border rounded lowercase text-xs sm:text-sm" value={dp.correo || ''} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfMovil || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfLocal || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
               </div>
 
               <div className="bg-red-50 p-3 sm:p-4 rounded-lg border border-red-100 mt-6 mb-6">
                 <h4 className="text-xs sm:text-sm font-bold text-red-800 mb-3 uppercase">En caso de emergencia comunicarse con</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaNombre1 || ''} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaTelefono1 || ''} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaNombre2 || ''} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
-                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaTelefono2 || ''} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 1 (Nombre y Apellido) <Req/></label><input type="text" autoComplete="off" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaNombre1 || ''} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 1 <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" autoComplete="off" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaTelefono1 || ''} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono1', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Contacto 2 (Nombre y Apellido) <Req/></label><input type="text" autoComplete="off" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaNombre2 || ''} onChange={e => handleInputChange('datosPersonales', 'emergenciaNombre2', e.target.value)} /></div>
+                  <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Contacto 2 <Req/></label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" autoComplete="off" className="w-full p-2 border border-red-300 rounded text-xs sm:text-sm" value={dp.emergenciaTelefono2 || ''} onChange={e => handlePhoneChange('datosPersonales', 'emergenciaTelefono2', e.target.value)} /></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" value={dp.carnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Nro Carnet" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroCarnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} /></div></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿Posee Carnet de la Patria? / Nro</label>
+                  <div className="flex gap-2">
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-1/3 p-2 border rounded bg-white text-xs sm:text-sm" 
+                      value={dp.carnetPatria || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'carnetPatria', e.target.value)}
+                    >
+                      <option value="">NO / SÍ</option>
+                      <option value="SÍ">SÍ</option>
+                      <option value="NO">NO</option>
+                    </select>
+                    <input type="text" placeholder="Nro Carnet" autoComplete="off" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroCarnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} />
+                  </div>
+                </div>
               </div>
 
               <div className="bg-gray-50 p-3 sm:p-4 rounded-lg border mt-6">
                 <h4 className="text-xs sm:text-sm font-bold text-gray-700 mb-3 uppercase">Tallas y Medidas</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-                  <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.estatura || ''} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.peso || ''} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Camisa</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={dp.tallaCamisa || ''} onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Chemise</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={dp.tallaChemise || ''} onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Franela</label><select className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={dp.tallaFranela || ''} onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}><option value="">SEL...</option><option value="SS">SS</option><option value="S">S</option><option value="M">M</option><option value="L">L</option><option value="XL">XL</option><option value="XXL">XXL</option><option value="XXXL">XXXL</option></select></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaBluejean || ''} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaBota || ''} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaZapato || ''} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
-                  <div><label className="block text-xs text-gray-600 mb-1">Casco</label><input type="text" placeholder="Ej. L o 58cm" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaCasco || ''} onChange={e => handleInputChange('datosPersonales', 'tallaCasco', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Estatura <Req/></label><input type="text" placeholder="Ej. 1.75m" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.estatura || ''} onChange={e => handleInputChange('datosPersonales', 'estatura', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Peso <Req/></label><input type="text" placeholder="Ej. 75kg" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.peso || ''} onChange={e => handleInputChange('datosPersonales', 'peso', e.target.value)} /></div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Camisa</label>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded text-xs sm:text-sm bg-white" 
+                      value={dp.tallaCamisa || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'tallaCamisa', e.target.value)}
+                    >
+                      <option value="">SEL...</option>
+                      <option value="SS">SS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                      <option value="XXXL">XXXL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Chemise</label>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded text-xs sm:text-sm bg-white" 
+                      value={dp.tallaChemise || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'tallaChemise', e.target.value)}
+                    >
+                      <option value="">SEL...</option>
+                      <option value="SS">SS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                      <option value="XXXL">XXXL</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-600 mb-1">Franela</label>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded text-xs sm:text-sm bg-white" 
+                      value={dp.tallaFranela || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'tallaFranela', e.target.value)}
+                    >
+                      <option value="">SEL...</option>
+                      <option value="SS">SS</option>
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="L">L</option>
+                      <option value="XL">XL</option>
+                      <option value="XXL">XXL</option>
+                      <option value="XXXL">XXXL</option>
+                    </select>
+                  </div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Bluejean</label><input type="text" placeholder="Ej. 32" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaBluejean || ''} onChange={e => handleInputChange('datosPersonales', 'tallaBluejean', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Bota Seg.</label><input type="text" placeholder="Ej. 42" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaBota || ''} onChange={e => handleInputChange('datosPersonales', 'tallaBota', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Zapatos</label><input type="text" placeholder="Ej. 42" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaZapato || ''} onChange={e => handleInputChange('datosPersonales', 'tallaZapato', e.target.value)} /></div>
+                  <div><label className="block text-xs text-gray-600 mb-1">Casco</label><input type="text" placeholder="Ej. L o 58cm" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tallaCasco || ''} onChange={e => handleInputChange('datosPersonales', 'tallaCasco', e.target.value)} /></div>
                 </div>
               </div>
             </div>
@@ -1296,6 +1531,8 @@ const App = () => {
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Entidad Federal (Estado) <Req/></label>
                   <select 
+                    autoComplete="off" 
+                    translate="no" 
                     className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium uppercase" 
                     value={dir.estado || ''} 
                     onChange={e => handleAddressChange('estado', e.target.value)}
@@ -1309,6 +1546,8 @@ const App = () => {
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Municipio <Req/></label>
                   <select 
+                    autoComplete="off" 
+                    translate="no" 
                     className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium uppercase disabled:bg-gray-100" 
                     value={dir.municipio || ''} 
                     onChange={e => handleAddressChange('municipio', e.target.value)}
@@ -1323,6 +1562,8 @@ const App = () => {
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Parroquia <Req/></label>
                   <select 
+                    autoComplete="off" 
+                    translate="no" 
                     className="w-full p-2 border rounded bg-white text-xs sm:text-sm font-medium uppercase disabled:bg-gray-100" 
                     value={dir.parroquia || ''} 
                     onChange={e => handleAddressChange('parroquia', e.target.value)}
@@ -1339,15 +1580,15 @@ const App = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Ciudad <Req/></label>
-                  <input type="text" placeholder="Ej. CARACAS" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.ciudad || ''} onChange={e => handleAddressChange('ciudad', e.target.value)} />
+                  <input type="text" placeholder="Ej. CARACAS" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.ciudad || ''} onChange={e => handleAddressChange('ciudad', e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Urbanización, Conjunto Residencial, Barrio o Sector <Req/></label>
-                  <input type="text" placeholder="Ej. URB. LOS PALOS GRANDES / C.R. EL ÁVILA" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.urbanizacion || ''} onChange={e => handleAddressChange('urbanizacion', e.target.value)} />
+                  <input type="text" placeholder="Ej. URB. LOS PALOS GRANDES / C.R. EL ÁVILA" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.urbanizacion || ''} onChange={e => handleAddressChange('urbanizacion', e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Vía de Comunicación (Calle/Avenida/Vereda) <Req/></label>
-                  <input type="text" placeholder="Ej. AV. FRANCISCO DE MIRANDA" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.avenida || ''} onChange={e => handleAddressChange('avenida', e.target.value)} />
+                  <input type="text" placeholder="Ej. AV. FRANCISCO DE MIRANDA" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.avenida || ''} onChange={e => handleAddressChange('avenida', e.target.value)} />
                 </div>
               </div>
 
@@ -1356,7 +1597,13 @@ const App = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Inmueble</label>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase" value={dir.tipoInmueble || 'CASA'} onChange={e => handleAddressChange('tipoInmueble', e.target.value)}>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase" 
+                      value={dir.tipoInmueble || 'CASA'} 
+                      onChange={e => handleAddressChange('tipoInmueble', e.target.value)}
+                    >
                       <option value="CASA">CASA / QUINTA</option>
                       <option value="EDIFICIO">EDIFICIO / RESIDENCIA</option>
                     </select>
@@ -1365,14 +1612,14 @@ const App = () => {
                     <label className="block text-xs font-medium text-gray-700 mb-1">
                       {dir.tipoInmueble === 'EDIFICIO' ? 'Nombre del Edificio / Residencia' : 'Nombre de la Quinta o Nro. de Casa'}
                     </label>
-                    <input type="text" placeholder={dir.tipoInmueble === 'EDIFICIO' ? 'Ej. RESIDENCIAS EL ÁVILA' : 'Ej. QUINTA MARÍA / CASA NRO. 15'} className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.inmueble || ''} onChange={e => handleAddressChange('inmueble', e.target.value)} />
+                    <input type="text" placeholder={dir.tipoInmueble === 'EDIFICIO' ? 'Ej. RESIDENCIAS EL ÁVILA' : 'Ej. QUINTA MARÍA / CASA NRO. 15'} autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.inmueble || ''} onChange={e => handleAddressChange('inmueble', e.target.value)} />
                   </div>
                 </div>
 
                 {dir.tipoInmueble === 'EDIFICIO' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3 pt-3 border-t">
-                    <div><label className="block text-xs font-medium text-gray-700 mb-1">Número de Piso</label><input type="text" placeholder="Ej. PISO 4" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.piso || ''} onChange={e => handleAddressChange('piso', e.target.value)} /></div>
-                    <div><label className="block text-xs font-medium text-gray-700 mb-1">Número de Apartamento</label><input type="text" placeholder="Ej. APTO. 42" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.apto || ''} onChange={e => handleAddressChange('apto', e.target.value)} /></div>
+                    <div><label className="block text-xs font-medium text-gray-700 mb-1">Número de Piso</label><input type="text" placeholder="Ej. PISO 4" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.piso || ''} onChange={e => handleAddressChange('piso', e.target.value)} /></div>
+                    <div><label className="block text-xs font-medium text-gray-700 mb-1">Número de Apartamento</label><input type="text" placeholder="Ej. APTO. 42" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.apto || ''} onChange={e => handleAddressChange('apto', e.target.value)} /></div>
                   </div>
                 )}
               </div>
@@ -1380,16 +1627,16 @@ const App = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-medium text-gray-700 mb-1">Punto de Referencia (Obligatorio) <Req/></label>
-                  <input type="text" placeholder="Ej. A media cuadra de la estación de Metro o frente al C.C." className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.puntoReferencia || ''} onChange={e => handleAddressChange('puntoReferencia', e.target.value)} />
+                  <input type="text" placeholder="Ej. A media cuadra de la estación de Metro o frente al C.C." autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase" value={dir.puntoReferencia || ''} onChange={e => handleAddressChange('puntoReferencia', e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Código Postal (4 dígitos) <Req/></label>
-                  <input type="text" placeholder="Ej. 1050" maxLength="4" className="w-full p-2 border rounded text-xs sm:text-sm uppercase font-mono" value={dir.codigoPostal || ''} onChange={e => handleAddressChange('codigoPostal', e.target.value.replace(/\D/g, ''))} />
+                  <input type="text" placeholder="Ej. 1050" maxLength="4" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm uppercase font-mono" value={dir.codigoPostal || ''} onChange={e => handleAddressChange('codigoPostal', e.target.value.replace(/\D/g, ''))} />
                 </div>
               </div>
             </div>
 
-            {/* ================= PESTAÑA 3 ================= */}
+            {/* ================= PESTAÑA 3: EDUCACIÓN E IDIOMAS ================= */}
             <div className={activeTab === 2 ? 'block' : 'hidden'}>
               <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Educación Formal</h3>
               <div className="overflow-x-auto mb-8 border rounded-lg">
@@ -1401,29 +1648,76 @@ const App = () => {
                     {(ed.niveles || []).map((nivel, idx) => (
                       <tr key={idx} className="border-b hover:bg-gray-50">
                         <td className="p-3 font-semibold text-gray-700">{nivel.nivel}</td>
-                        <td className="p-3"><select className="w-full p-2 border rounded bg-white text-xs" value={nivel.graduado || ''} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}><option value="">SEL...</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></td>
-                        <td className="p-3"><input type="text" className="w-full p-2 border rounded text-xs" value={nivel.titulo || ''} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'titulo', e.target.value)} /></td>
+                        <td className="p-3">
+                          <select 
+                            autoComplete="off" 
+                            translate="no" 
+                            className="w-full p-2 border rounded bg-white text-xs" 
+                            value={nivel.graduado || ''} 
+                            onChange={e => handleArrayChange('educacion', 'niveles', idx, 'graduado', e.target.value)}
+                          >
+                            <option value="">SEL...</option>
+                            <option value="SÍ">SÍ</option>
+                            <option value="NO">NO</option>
+                          </select>
+                        </td>
+                        <td className="p-3"><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={nivel.titulo || ''} onChange={e => handleArrayChange('educacion', 'niveles', idx, 'titulo', e.target.value)} /></td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label><select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={ed.estudiaActualmente || ''} onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}><option value="">NO / SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.horario || ''} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.institucion || ''} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.carrera || ''} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.nivelAlcanzado || ''} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
-                <div className="sm:col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.traslado || ''} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿Estudia Act? <Req/></label>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={ed.estudiaActualmente || ''} 
+                    onChange={e => handleInputChange('educacion', 'estudiaActualmente', e.target.value)}
+                  >
+                    <option value="">NO / SÍ</option>
+                    <option value="SÍ">SÍ</option>
+                    <option value="NO">NO</option>
+                  </select>
+                </div>
+                <div><label className="block text-xs font-medium text-gray-700 mb-1">Horario</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.horario || ''} onChange={e => handleInputChange('educacion', 'horario', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Institución</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.institucion || ''} onChange={e => handleInputChange('educacion', 'institucion', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Carrera</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.carrera || ''} onChange={e => handleInputChange('educacion', 'carrera', e.target.value)} /></div>
+                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Nivel Alcanzado</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.nivelAlcanzado || ''} onChange={e => handleInputChange('educacion', 'nivelAlcanzado', e.target.value)} /></div>
+                <div className="sm:col-span-4"><label className="block text-xs font-medium text-gray-700 mb-1">¿Cómo se traslada desde casa a universidad/trabajo? <Req/></label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={ed.traslado || ''} onChange={e => handleInputChange('educacion', 'traslado', e.target.value)} /></div>
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
                 <div>
                   <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Idiomas</h4>
                   {(safeData.programasIdiomas?.idiomas || []).map((idioma, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input type="text" placeholder={`${idx+1}) Indique Idioma`} className="w-1/2 p-2 border rounded text-xs" value={idioma.idioma || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'idioma', e.target.value)} />
-                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelHablado || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelHablado', e.target.value)}><option value="">HABLADO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
-                      <select className="w-1/4 p-2 border rounded bg-white text-xs" value={idioma.nivelEscrito || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelEscrito', e.target.value)}><option value="">ESCRITO</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
+                      <input type="text" placeholder={`${idx+1}) Indique Idioma`} autoComplete="off" className="w-1/2 p-2 border rounded text-xs" value={idioma.idioma || ''} onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'idioma', e.target.value)} />
+                      <select 
+                        autoComplete="off" 
+                        translate="no" 
+                        className="w-1/4 p-2 border rounded bg-white text-xs" 
+                        value={idioma.nivelHablado || ''} 
+                        onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelHablado', e.target.value)}
+                      >
+                        <option value="">HABLADO</option>
+                        <option value="BÁSICO">BÁSICO</option>
+                        <option value="MEDIO">MEDIO</option>
+                        <option value="AVANZADO">AVANZADO</option>
+                      </select>
+                      <select 
+                        autoComplete="off" 
+                        translate="no" 
+                        className="w-1/4 p-2 border rounded bg-white text-xs" 
+                        value={idioma.nivelEscrito || ''} 
+                        onChange={e => handleArrayChange('programasIdiomas', 'idiomas', idx, 'nivelEscrito', e.target.value)}
+                      >
+                        <option value="">ESCRITO</option>
+                        <option value="BÁSICO">BÁSICO</option>
+                        <option value="MEDIO">MEDIO</option>
+                        <option value="AVANZADO">AVANZADO</option>
+                      </select>
                     </div>
                   ))}
                 </div>
@@ -1431,8 +1725,19 @@ const App = () => {
                   <h4 className="text-sm font-bold text-gray-700 mb-3 border-b pb-1">Programas Informáticos</h4>
                   {(safeData.programasIdiomas?.programas || []).map((prog, idx) => (
                     <div key={idx} className="flex gap-2 mb-2">
-                      <input type="text" placeholder={`${idx+1}) Señale el Programa`} className="w-2/3 p-2 border rounded text-xs" value={prog.programa || ''} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'programa', e.target.value)} />
-                      <select className="w-1/3 p-2 border rounded bg-white text-xs" value={prog.nivelDominio || ''} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'nivelDominio', e.target.value)}><option value="">NIVEL</option><option value="BÁSICO">BÁSICO</option><option value="MEDIO">MEDIO</option><option value="AVANZADO">AVANZADO</option></select>
+                      <input type="text" placeholder={`${idx+1}) Señale el Programa`} autoComplete="off" className="w-2/3 p-2 border rounded text-xs" value={prog.programa || ''} onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'programa', e.target.value)} />
+                      <select 
+                        autoComplete="off" 
+                        translate="no" 
+                        className="w-1/3 p-2 border rounded bg-white text-xs" 
+                        value={prog.nivelDominio || ''} 
+                        onChange={e => handleArrayChange('programasIdiomas', 'programas', idx, 'nivelDominio', e.target.value)}
+                      >
+                        <option value="">NIVEL</option>
+                        <option value="BÁSICO">BÁSICO</option>
+                        <option value="MEDIO">MEDIO</option>
+                        <option value="AVANZADO">AVANZADO</option>
+                      </select>
                     </div>
                   ))}
                 </div>
@@ -1442,7 +1747,7 @@ const App = () => {
             {/* ================= PESTAÑA 4: CARGA FAMILIAR Y DISCAPACIDAD ================= */}
             <div className={activeTab === 3 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800">Carga Familiar</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Grupo Familiar HCM</h3>
                 <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', viveConUsted: 'SÍ', lugarResidencia: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
                   <Plus size={16} className="mr-1"/> Añadir Familiar
                 </button>
@@ -1470,12 +1775,18 @@ const App = () => {
                       const esConDiscapacidad = (dep.parentesco === 'HIJO CON DISCAPACIDAD' || dep.parentesco === 'HIJA CON DISCAPACIDAD' || dep.parentesco?.includes('DISCAPACIDAD'));
                       return (
                         <tr key={idx} className="border-b hover:bg-gray-50">
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.nombres || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={dep.cedula || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
-                          <td className="p-1"><input type="date" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={dep.nombres || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'nombres', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={dep.cedula || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'cedula', e.target.value)} /></td>
+                          <td className="p-1"><input type="date" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={dep.fechaNacimiento || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'fechaNacimiento', e.target.value)} /></td>
                           <td className="p-1"><input type="number" readOnly placeholder="Auto." className="w-full p-1.5 border rounded bg-gray-100 text-gray-600 text-xs" value={dep.edad || ''} /></td>
                           <td className="p-1">
-                            <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.parentesco || ''} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)}>
+                            <select 
+                              autoComplete="off" 
+                              translate="no" 
+                              className="w-full p-1.5 border rounded bg-white text-xs uppercase" 
+                              value={dep.parentesco || ''} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'parentesco', e.target.value)}
+                            >
                               <option value="">SELECCIONE</option>
                               <option value="CÓNYUGE">CÓNYUGE</option>
                               <option value="PADRE">PADRE</option>
@@ -1487,7 +1798,13 @@ const App = () => {
                             </select>
                           </td>
                           <td className="p-1">
-                            <select className="w-full p-1.5 border rounded bg-white text-xs uppercase" value={dep.viveConUsted || 'SÍ'} onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'viveConUsted', e.target.value)}>
+                            <select 
+                              autoComplete="off" 
+                              translate="no" 
+                              className="w-full p-1.5 border rounded bg-white text-xs uppercase" 
+                              value={dep.viveConUsted || 'SÍ'} 
+                              onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'viveConUsted', e.target.value)}
+                            >
                               <option value="SÍ">SÍ</option>
                               <option value="NO">NO</option>
                             </select>
@@ -1497,6 +1814,7 @@ const App = () => {
                               type="text" 
                               placeholder={dep.viveConUsted === 'NO' ? 'ESTADO/CIUDAD O FUERA' : 'N/A'} 
                               disabled={dep.viveConUsted === 'SÍ'}
+                              autoComplete="off"
                               className={`w-full p-1.5 border rounded text-xs uppercase ${dep.viveConUsted === 'NO' && !dep.lugarResidencia ? 'border-red-500 bg-red-50' : ''} ${dep.viveConUsted === 'SÍ' ? 'bg-gray-100' : ''}`} 
                               value={dep.lugarResidencia || ''} 
                               onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'lugarResidencia', e.target.value)} 
@@ -1507,6 +1825,7 @@ const App = () => {
                               type="text" 
                               placeholder={esConDiscapacidad ? 'OBLIGATORIO' : 'N/A'} 
                               disabled={!esConDiscapacidad}
+                              autoComplete="off"
                               className={`w-full p-1.5 border rounded text-xs ${esConDiscapacidad && !dep.carnetConapdis ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
                               value={dep.carnetConapdis || ''} 
                               onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'carnetConapdis', e.target.value)} 
@@ -1517,6 +1836,7 @@ const App = () => {
                               type="text" 
                               placeholder={esConDiscapacidad ? 'TAL CUAL CARNET' : 'N/A'} 
                               disabled={!esConDiscapacidad}
+                              autoComplete="off"
                               className={`w-full p-1.5 border rounded text-xs uppercase ${esConDiscapacidad && !dep.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
                               value={dep.tipoDiscapacidad || ''} 
                               onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'tipoDiscapacidad', e.target.value)} 
@@ -1527,6 +1847,7 @@ const App = () => {
                               type="text" 
                               placeholder={esConDiscapacidad ? 'ESPECIFIQUE' : 'N/A'} 
                               disabled={!esConDiscapacidad}
+                              autoComplete="off"
                               className={`w-full p-1.5 border rounded text-xs ${esConDiscapacidad && !dep.especifique ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
                               value={dep.especifique || ''} 
                               onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'especifique', e.target.value)} 
@@ -1535,6 +1856,8 @@ const App = () => {
                           <td className="p-1">
                             <select 
                               disabled={!esConDiscapacidad}
+                              autoComplete="off" 
+                              translate="no" 
                               className={`w-full p-1.5 border rounded bg-white text-xs uppercase ${esConDiscapacidad && !dep.grado ? 'border-red-500 bg-red-50' : ''} ${!esConDiscapacidad ? 'bg-gray-100' : ''}`} 
                               value={dep.grado || ''} 
                               onChange={e => handleArrayChange('actividadesFamilia', 'dependientes', idx, 'grado', e.target.value)}
@@ -1561,7 +1884,13 @@ const App = () => {
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     ¿Posee discapacidad? <Req/> {fs.discapacidadPropia === 'SÍ' && <Req/>}
                   </label>
-                  <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={fs.discapacidadPropia || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                    value={fs.discapacidadPropia || ''} 
+                    onChange={e => handleInputChange('actividadesFamilia', 'discapacidadPropia', e.target.value)}
+                  >
                     <option value="">NO / SÍ</option>
                     <option value="SÍ">SÍ</option>
                     <option value="NO">NO</option>
@@ -1571,19 +1900,25 @@ const App = () => {
                   <>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">N° de Carnet CONAPDIS <Req/></label>
-                      <input type="text" placeholder="N° Carnet CONAPDIS" className={`w-full p-2 border rounded text-xs sm:text-sm ${!fs.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} value={fs.carnetConapdis || ''} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} />
+                      <input type="text" placeholder="N° Carnet CONAPDIS" autoComplete="off" className={`w-full p-2 border rounded text-xs sm:text-sm ${!fs.carnetConapdis ? 'border-red-500 bg-red-50' : ''}`} value={fs.carnetConapdis || ''} onChange={e => handleInputChange('actividadesFamilia', 'carnetConapdis', e.target.value)} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Tipo de Discapacidad (Tal cual carnet) <Req/></label>
-                      <input type="text" placeholder="EJ. FÍSICA, SENSORIAL..." className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.tipoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'tipoDiscapacidad', e.target.value)} />
+                      <input type="text" placeholder="EJ. FÍSICA, SENSORIAL..." autoComplete="off" className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.tipoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.tipoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'tipoDiscapacidad', e.target.value)} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Especifique <Req/></label>
-                      <input type="text" placeholder="Detalle la condición" className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} value={fs.discapacidadDesc || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} />
+                      <input type="text" placeholder="Detalle la condición" autoComplete="off" className={`w-full p-2 border rounded text-xs sm:text-sm uppercase ${!fs.discapacidadDesc ? 'border-red-500 bg-red-50' : ''}`} value={fs.discapacidadDesc || ''} onChange={e => handleInputChange('actividadesFamilia', 'discapacidadDesc', e.target.value)} />
                     </div>
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">Grado <Req/></label>
-                      <select className={`w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase ${!fs.gradoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} value={fs.gradoDiscapacidad || ''} onChange={e => handleInputChange('actividadesFamilia', 'gradoDiscapacidad', e.target.value)}>
+                      <select 
+                        autoComplete="off" 
+                        translate="no" 
+                        className={`w-full p-2 border rounded bg-white text-xs sm:text-sm uppercase ${!fs.gradoDiscapacidad ? 'border-red-500 bg-red-50' : ''}`} 
+                        value={fs.gradoDiscapacidad || ''} 
+                        onChange={e => handleInputChange('actividadesFamilia', 'gradoDiscapacidad', e.target.value)}
+                      >
                         <option value="">SELECCIONE GRADO</option>
                         <option value="LEVE">LEVE</option>
                         <option value="MODERADO">MODERADO</option>
@@ -1597,12 +1932,31 @@ const App = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4 border-t pt-4">
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label><div className="flex gap-2"><select className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" value={fs.tomaMedicamento || ''} onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Cuál y frecuencia" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={fs.medicamentoCual || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} /></div></div>
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label><input type="text" className="w-full p-2 border rounded text-xs sm:text-sm" value={fs.medicamentoMotivo || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} /></div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿Toma medicamento? <Req/> / Cuál y Frec.</label>
+                  <div className="flex gap-2">
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-1/3 sm:w-1/4 p-2 border rounded bg-white text-xs" 
+                      value={fs.tomaMedicamento || ''} 
+                      onChange={e => handleInputChange('actividadesFamilia', 'tomaMedicamento', e.target.value)}
+                    >
+                      <option value="">NO/SÍ</option>
+                      <option value="SÍ">SÍ</option>
+                      <option value="NO">NO</option>
+                    </select>
+                    <input type="text" placeholder="Cuál y frecuencia" autoComplete="off" className="w-2/3 sm:w-3/4 p-2 border rounded text-xs" value={fs.medicamentoCual || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoCual', e.target.value)} />
+                  </div>
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Indique desde cuándo y su motivo</label>
+                  <input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={fs.medicamentoMotivo || ''} onChange={e => handleInputChange('actividadesFamilia', 'medicamentoMotivo', e.target.value)} />
+                </div>
               </div>
             </div>
 
-            {/* ================= PESTAÑA 5 ================= */}
+            {/* ================= PESTAÑA 5: EXPERIENCIA ================= */}
             <div className={activeTab === 4 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Admin Pública</h3>
@@ -1613,21 +1967,53 @@ const App = () => {
                 <div key={idx} className="bg-gray-50 p-3 sm:p-4 border rounded-lg mb-4 relative">
                   <button type="button" onClick={() => removeRow('experiencia', 'adminPublica', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 size={16} /></button>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-2">
-                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Organismo</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.organismo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'organismo', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.direccion || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'direccion', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.telefono || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'telefono', e.target.value)} /></div>
+                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Organismo</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.organismo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'organismo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.direccion || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'direccion', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.telefono || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'telefono', e.target.value)} /></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.cargo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'cargo', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.ingreso || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'ingreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.egreso || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'egreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.motivo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'motivo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.cargo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'cargo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.ingreso || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'ingreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.egreso || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'egreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.motivo || ''} onChange={e => handleArrayChange('experiencia', 'adminPublica', idx, 'motivo', e.target.value)} /></div>
                   </div>
                 </div>
               ))}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8 bg-blue-50 p-4 border border-blue-100 rounded-lg">
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={exp.esJubilado || ''} onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Fecha y Organismo" className="w-2/3 p-2 border rounded text-xs" value={exp.jubiladoDesc || ''} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} /></div></div>
-                <div><label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label><div className="flex gap-2"><select className="w-1/3 p-2 border rounded bg-white text-xs" value={exp.enProcesoJubilacion || ''} onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}><option value="">NO/SÍ</option><option value="SÍ">SÍ</option><option value="NO">NO</option></select><input type="text" placeholder="Organismo tramitante" className="w-2/3 p-2 border rounded text-xs" value={exp.procesoJubilacionDesc || ''} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} /></div></div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿Es jubilado Admin Pública? <Req/> / Fecha y Org</label>
+                  <div className="flex gap-2">
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-1/3 p-2 border rounded bg-white text-xs" 
+                      value={exp.esJubilado || ''} 
+                      onChange={e => handleInputChange('experiencia', 'esJubilado', e.target.value)}
+                    >
+                      <option value="">NO/SÍ</option>
+                      <option value="SÍ">SÍ</option>
+                      <option value="NO">NO</option>
+                    </select>
+                    <input type="text" placeholder="Fecha y Organismo" autoComplete="off" className="w-2/3 p-2 border rounded text-xs" value={exp.jubiladoDesc || ''} onChange={e => handleInputChange('experiencia', 'jubiladoDesc', e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">¿En proceso de jubilación? <Req/> / Organismo</label>
+                  <div className="flex gap-2">
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-1/3 p-2 border rounded bg-white text-xs" 
+                      value={exp.enProcesoJubilacion || ''} 
+                      onChange={e => handleInputChange('experiencia', 'enProcesoJubilacion', e.target.value)}
+                    >
+                      <option value="">NO/SÍ</option>
+                      <option value="SÍ">SÍ</option>
+                      <option value="NO">NO</option>
+                    </select>
+                    <input type="text" placeholder="Organismo tramitante" autoComplete="off" className="w-2/3 p-2 border rounded text-xs" value={exp.procesoJubilacionDesc || ''} onChange={e => handleInputChange('experiencia', 'procesoJubilacionDesc', e.target.value)} />
+                  </div>
+                </div>
               </div>
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-sm font-bold text-gray-800 uppercase">Exp. Laboral Empresa Privada</h3>
@@ -1637,15 +2023,15 @@ const App = () => {
                 <div key={idx} className="bg-gray-50 p-3 sm:p-4 border rounded-lg mb-4 relative">
                   <button type="button" onClick={() => removeRow('experiencia', 'empresaPrivada', idx)} className="absolute top-2 right-2 text-red-500 hover:bg-red-100 p-1.5 rounded"><Trash2 size={16} /></button>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-2">
-                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Empresa</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.empresa || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'empresa', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.direccion || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'direccion', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.telefono || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'telefono', e.target.value)} /></div>
+                    <div className="sm:col-span-2"><label className="block text-xs text-gray-600 mb-1">Empresa</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.empresa || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'empresa', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Dirección</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.direccion || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'direccion', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Teléfono(s)</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.telefono || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'telefono', e.target.value)} /></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.cargo || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'cargo', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.ingreso || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'ingreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" className="w-full p-2 border rounded text-xs" value={ex.egreso || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'egreso', e.target.value)} /></div>
-                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" className="w-full p-2 border rounded text-xs" value={ex.motivo || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'motivo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Último cargo</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.cargo || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'cargo', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Ingreso</label><input type="date" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.ingreso || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'ingreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">F. Egreso</label><input type="date" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.egreso || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'egreso', e.target.value)} /></div>
+                    <div><label className="block text-xs text-gray-600 mb-1">Motivo del Retiro</label><input type="text" autoComplete="off" className="w-full p-2 border rounded text-xs" value={ex.motivo || ''} onChange={e => handleArrayChange('experiencia', 'empresaPrivada', idx, 'motivo', e.target.value)} /></div>
                   </div>
                 </div>
               ))}
@@ -1656,7 +2042,7 @@ const App = () => {
               <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-2 border-b pb-2 flex items-center gap-2">
                 <ShieldPlus className="text-blue-600" size={20} /> Fondo Administrado de Salud (HCM) y Pólizas
               </h3>
-              <p className="text-xs text-gray-500 mb-6">Información institucional complementaria para la afiliación al fondo de salud de Movilnet[cite: 5, 6].</p>
+              <p className="text-xs text-gray-500 mb-6">Información institucional complementaria para la afiliación al fondo de salud de Movilnet.</p>
 
               {/* Pregunta embarazo si es Femenino */}
               {dp.sexo === 'F' && (
@@ -1664,14 +2050,20 @@ const App = () => {
                   <label className="block text-xs font-bold text-pink-900 mb-2 uppercase">¿Está usted actualmente embarazada? <Req/></label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={hcm.estaEmbarazada || 'NO'} onChange={e => handleInputChange('hcmPolizas', 'estaEmbarazada', e.target.value)}>
+                      <select 
+                        autoComplete="off" 
+                        translate="no" 
+                        className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                        value={hcm.estaEmbarazada || 'NO'} 
+                        onChange={e => handleInputChange('hcmPolizas', 'estaEmbarazada', e.target.value)}
+                      >
                         <option value="NO">NO</option>
                         <option value="SÍ">SÍ</option>
                       </select>
                     </div>
                     {hcm.estaEmbarazada === 'SÍ' && (
                       <div>
-                        <input type="number" placeholder="¿Cuántos meses de embarazo tiene?" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={hcm.mesesEmbarazo || ''} onChange={e => handleInputChange('hcmPolizas', 'mesesEmbarazo', e.target.value)} required />
+                        <input type="number" placeholder="¿Cuántos meses de embarazo tiene?" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={hcm.mesesEmbarazo || ''} onChange={e => handleInputChange('hcmPolizas', 'mesesEmbarazo', e.target.value)} required />
                       </div>
                     )}
                   </div>
@@ -1683,14 +2075,20 @@ const App = () => {
                 <label className="block text-xs font-bold text-blue-900 mb-2 uppercase">¿Posee algún familiar trabajando en Telecomunicaciones Movilnet C.A.? <Req/></label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <select className="w-full p-2 border rounded bg-white text-xs sm:text-sm" value={hcm.familiarMovilnet || 'NO'} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnet', e.target.value)}>
+                    <select 
+                      autoComplete="off" 
+                      translate="no" 
+                      className="w-full p-2 border rounded bg-white text-xs sm:text-sm" 
+                      value={hcm.familiarMovilnet || 'NO'} 
+                      onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnet', e.target.value)}
+                    >
                       <option value="NO">NO</option>
                       <option value="SÍ">SÍ</option>
                     </select>
                   </div>
                   {hcm.familiarMovilnet === 'SÍ' && (
                     <div>
-                      <input type="text" placeholder="Indique el Parentesco y Nombres" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={hcm.familiarMovilnetParentesco || ''} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnetParentesco', e.target.value)} required />
+                      <input type="text" placeholder="Indique el Parentesco y Nombres" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm bg-white" value={hcm.familiarMovilnetParentesco || ''} onChange={e => handleInputChange('hcmPolizas', 'familiarMovilnetParentesco', e.target.value)} required />
                     </div>
                   )}
                 </div>
@@ -1700,7 +2098,13 @@ const App = () => {
               <div className="mb-8">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="text-sm font-bold text-gray-800 uppercase">¿Mantiene otro Seguro o Fondo de Salud vigente?</h4>
-                  <select className="p-1.5 border rounded bg-white text-xs font-bold" value={hcm.tieneOtroSeguro || 'NO'} onChange={e => handleInputChange('hcmPolizas', 'tieneOtroSeguro', e.target.value)}>
+                  <select 
+                    autoComplete="off" 
+                    translate="no" 
+                    className="p-1.5 border rounded bg-white text-xs font-bold" 
+                    value={hcm.tieneOtroSeguro || 'NO'} 
+                    onChange={e => handleInputChange('hcmPolizas', 'tieneOtroSeguro', e.target.value)}
+                  >
                     <option value="NO">NO</option>
                     <option value="SÍ">SÍ</option>
                   </select>
@@ -1714,11 +2118,11 @@ const App = () => {
                     </div>
                     {(hcm.segurosVigentes || []).map((seg, idx) => (
                       <div key={idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-2 relative bg-white p-3 border rounded">
-                        <div><label className="block text-[10px] text-gray-500">Empresa de Seguros</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.empresaSeguros || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'empresaSeguros', e.target.value)} /></div>
-                        <div><label className="block text-[10px] text-gray-500">N° de Póliza o Fondo</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.nroPoliza || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'nroPoliza', e.target.value)} /></div>
-                        <div><label className="block text-[10px] text-gray-500">Suma Aseguradora</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.sumaAseguradora || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'sumaAseguradora', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">Empresa de Seguros</label><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={seg.empresaSeguros || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'empresaSeguros', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">N° de Póliza o Fondo</label><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={seg.nroPoliza || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'nroPoliza', e.target.value)} /></div>
+                        <div><label className="block text-[10px] text-gray-500">Suma Aseguradora</label><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={seg.sumaAseguradora || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'sumaAseguradora', e.target.value)} /></div>
                         <div className="flex gap-2 items-end">
-                          <div className="flex-1"><label className="block text-[10px] text-gray-500">Deducible</label><input type="text" className="w-full p-1.5 border rounded text-xs" value={seg.deducible || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'deducible', e.target.value)} /></div>
+                          <div className="flex-1"><label className="block text-[10px] text-gray-500">Deducible</label><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={seg.deducible || ''} onChange={e => handleArrayChange('hcmPolizas', 'segurosVigentes', idx, 'deducible', e.target.value)} /></div>
                           <button type="button" onClick={() => removeRow('hcmPolizas', 'segurosVigentes', idx)} className="text-red-500 hover:bg-red-50 p-1 rounded h-8"><Trash2 size={16}/></button>
                         </div>
                       </div>
@@ -1748,11 +2152,23 @@ const App = () => {
                     <tbody>
                       {(hcm.beneficiariosFallecimiento || []).map((ben, idx) => (
                         <tr key={idx} className="border-b hover:bg-gray-50">
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.nombres || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'nombres', e.target.value)} /></td>
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs" value={ben.cedula || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'cedula', e.target.value)} /></td>
-                          <td className="p-1"><select className="w-full p-1.5 border rounded bg-white text-xs" value={ben.sexo || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'sexo', e.target.value)}><option value="">SEL</option><option value="M">M</option><option value="F">F</option></select></td>
-                          <td className="p-1"><input type="text" className="w-full p-1.5 border rounded text-xs uppercase" value={ben.parentesco || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'parentesco', e.target.value)} /></td>
-                          <td className="p-1"><input type="number" placeholder="Ej. 100" className="w-full p-1.5 border rounded text-xs" value={ben.porcentaje || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'porcentaje', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={ben.nombres || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'nombres', e.target.value)} /></td>
+                          <td className="p-1"><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={ben.cedula || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'cedula', e.target.value)} /></td>
+                          <td className="p-1">
+                            <select 
+                              autoComplete="off" 
+                              translate="no" 
+                              className="w-full p-1.5 border rounded bg-white text-xs" 
+                              value={ben.sexo || ''} 
+                              onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'sexo', e.target.value)}
+                            >
+                              <option value="">SEL</option>
+                              <option value="M">M</option>
+                              <option value="F">F</option>
+                            </select>
+                          </td>
+                          <td className="p-1"><input type="text" autoComplete="off" className="w-full p-1.5 border rounded text-xs uppercase" value={ben.parentesco || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'parentesco', e.target.value)} /></td>
+                          <td className="p-1"><input type="number" placeholder="Ej. 100" autoComplete="off" className="w-full p-1.5 border rounded text-xs" value={ben.porcentaje || ''} onChange={e => handleArrayChange('hcmPolizas', 'beneficiariosFallecimiento', idx, 'porcentaje', e.target.value)} /></td>
                           <td className="p-1 text-center"><button type="button" onClick={() => removeRow('hcmPolizas', 'beneficiariosFallecimiento', idx)} className="text-red-500 hover:bg-red-50 p-1.5 rounded"><Trash2 size={14} /></button></td>
                         </tr>
                       ))}
@@ -1767,7 +2183,7 @@ const App = () => {
                   <FileText className="text-blue-600" size={18} /> Declaración de Salud
                 </h4>
                 <p className="text-xs text-gray-600 mb-4 italic">
-                  "Indique si alguien de su grupo familiar padece o ha padecido alguna de las siguientes enfermedades incluyendo trabajador, subrayar en caso de ser afirmativo"[cite: 6].
+                  "Indique si alguien de su grupo familiar padece o ha padecido alguna de las siguientes enfermedades incluyendo trabajador, subrayar en caso de ser afirmativo".
                 </p>
 
                 <div className="space-y-3 text-xs">
@@ -1791,6 +2207,8 @@ const App = () => {
                     <div key={item.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white p-2.5 rounded border gap-2">
                       <span className="text-gray-800 font-medium flex-1">{item.label}</span>
                       <select 
+                        autoComplete="off" 
+                        translate="no" 
                         className="p-1 border rounded bg-white font-bold text-xs w-24"
                         value={declSalud[item.id] || 'NO'}
                         onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', item.id, e.target.value)}
@@ -1806,6 +2224,7 @@ const App = () => {
                     <textarea 
                       className="w-full p-2 border rounded text-xs bg-white uppercase" 
                       rows="3"
+                      autoComplete="off"
                       placeholder="DESCRIBA LOS DETALLES MÉDICOS..."
                       value={declSalud.detallesEnfermedades || ''}
                       onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', 'detallesEnfermedades', e.target.value)}
@@ -1818,7 +2237,7 @@ const App = () => {
               <div className="bg-blue-50/70 p-4 rounded-lg border border-blue-200">
                 <h4 className="text-xs font-bold text-blue-900 mb-2 uppercase">Declaración de Veracidad y Cierre</h4>
                 <p className="text-xs text-gray-700 mb-4 text-justify">
-                  "Yo declaro la exactitud y veracidad de toda la información arriba expresada y que nada he omitido, ocultando o disimulando, y estoy enterado que las falsedades y reticencias de mala fe por mi parte, podrían ir en contra del beneficio que ofrece el Fondo Administrado al cual pertenezco."[cite: 6]
+                  "Yo declaro la exactitud y veracidad de toda la información arriba expresada y que nada he omitido, ocultando o disimulando, y estoy enterado que las falsedades y reticencias de mala fe por mi parte, podrían ir en contra del beneficio que ofrece el Fondo Administrado al cual pertenezco."
                 </p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1827,6 +2246,7 @@ const App = () => {
                     <input 
                       type="text" 
                       placeholder="Ej. CARACAS" 
+                      autoComplete="off"
                       className="w-full p-2 border rounded text-xs bg-white uppercase"
                       value={hcm.lugarDeclaracion || ''}
                       onChange={e => handleInputChange('hcmPolizas', 'lugarDeclaracion', e.target.value)}
@@ -1837,6 +2257,7 @@ const App = () => {
                     <label className="block text-xs font-medium text-gray-700 mb-1">Fecha <Req/></label>
                     <input 
                       type="date" 
+                      autoComplete="off"
                       className="w-full p-2 border rounded text-xs bg-white"
                       value={hcm.fechaDeclaracion || ''}
                       onChange={e => handleInputChange('hcmPolizas', 'fechaDeclaracion', e.target.value)}
