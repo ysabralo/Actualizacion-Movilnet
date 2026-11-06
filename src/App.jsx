@@ -1747,7 +1747,7 @@ const App = () => {
             {/* ================= PESTAÑA 4: CARGA FAMILIAR Y DISCAPACIDAD ================= */}
             <div className={activeTab === 3 ? 'block' : 'hidden'}>
               <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="text-base sm:text-lg font-bold text-gray-800">Grupo Familiar HCM</h3>
+                <h3 className="text-base sm:text-lg font-bold text-gray-800">Grupo Familiar HCM (Padre, Madre, Cónyuge e Hijos)</h3>
                 <button type="button" onClick={() => addRow('actividadesFamilia', 'dependientes', { nombres: '', cedula: '', fechaNacimiento: '', edad: '', parentesco: '', viveConUsted: 'SÍ', lugarResidencia: '', carnetConapdis: '', tipoDiscapacidad: '', especifique: '', grado: '' })} className="text-xs bg-blue-100 text-blue-800 px-3 py-1.5 rounded hover:bg-blue-200 flex items-center font-bold">
                   <Plus size={16} className="mr-1"/> Añadir Familiar
                 </button>
