@@ -1447,7 +1447,7 @@ const App = () => {
                       <option value="SÍ">SÍ</option>
                       <option value="NO">NO</option>
                     </select>
-                    <input type="text" placeholder="Nro Carnet" autoComplete="off" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroCarnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} />
+                    <input type="text" placeholder="Nro serial" autoComplete="off" className="w-2/3 p-2 border rounded text-xs sm:text-sm" value={dp.nroCarnetPatria || ''} onChange={e => handleInputChange('datosPersonales', 'nroCarnetPatria', e.target.value)} />
                   </div>
                 </div>
               </div>
