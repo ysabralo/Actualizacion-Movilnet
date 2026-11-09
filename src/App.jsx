@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText, Eye, EyeOff } from 'lucide-react';
 import AdminExpedientes from './components/AdminExpedientes';
 
 // ================= DICCIONARIO GEOGRÁFICO DE VENEZUELA =================
@@ -476,6 +476,7 @@ const App = () => {
   // Campos de Login Habitual (Cédula + Clave)
   const [loginCedula, setLoginCedula] = useState('');
   const [loginClave, setLoginClave] = useState('');
+  const [showLoginClave, setShowLoginClave] = useState(false);
   
   // Campos de Primer Ingreso (P00 + Cédula + Fecha Nacimiento)
   const [p00Input, setP00Input] = useState('');
@@ -485,6 +486,8 @@ const App = () => {
   // Campos para crear clave nueva
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [isSearching, setIsSearching] = useState(false);
   const [loginError, setLoginError] = useState(null);
@@ -1022,7 +1025,23 @@ const App = () => {
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Clave Personal</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Key className="h-5 w-5 text-gray-400" /></div>
-                    <input type="password" placeholder="Tu clave de acceso" autoComplete="new-password" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={loginClave} onChange={(e) => setLoginClave(e.target.value)} required />
+                    <input 
+                      type={showLoginClave ? "text" : "password"} 
+                      placeholder="Tu clave de acceso" 
+                      autoComplete="new-password" 
+                      className="w-full pl-10 pr-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" 
+                      value={loginClave} 
+                      onChange={(e) => setLoginClave(e.target.value)} 
+                      required 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginClave(!showLoginClave)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      title={showLoginClave ? "Ocultar clave" : "Mostrar clave"}
+                    >
+                      {showLoginClave ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
                 </div>
 
@@ -1100,12 +1119,48 @@ const App = () => {
                 
                 <div className="mb-4">
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Nueva Clave</label>
-                  <input type="password" placeholder="Mínimo 4 caracteres" autoComplete="new-password" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                  <div className="relative">
+                    <input 
+                      type={showNewPassword ? "text" : "password"} 
+                      placeholder="Mínimo 4 caracteres" 
+                      autoComplete="new-password" 
+                      className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" 
+                      value={newPassword} 
+                      onChange={(e) => setNewPassword(e.target.value)} 
+                      required 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      title={showNewPassword ? "Ocultar clave" : "Mostrar clave"}
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 <div className="mb-6">
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Confirmar Clave</label>
-                  <input type="password" placeholder="Repite tu clave" autoComplete="new-password" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                  <div className="relative">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      placeholder="Repite tu clave" 
+                      autoComplete="new-password" 
+                      className="w-full p-3 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none font-medium text-sm" 
+                      value={confirmPassword} 
+                      onChange={(e) => setConfirmPassword(e.target.value)} 
+                      required 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      title={showConfirmPassword ? "Ocultar clave" : "Mostrar clave"}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {loginError && <div className="mb-6 p-3 bg-red-50 text-red-700 text-xs sm:text-sm border-l-4 border-red-500 rounded font-medium">{loginError}</div>}
