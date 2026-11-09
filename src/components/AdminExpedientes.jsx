@@ -3,7 +3,8 @@ import {
   Search, CheckCircle2, XCircle, AlertTriangle, FileText, Save, 
   ArrowLeft, ShieldCheck, User, Lock, LogOut, ShieldAlert, 
   ChevronRight, ChevronLeft, Check, AlertCircle, Info, 
-  Home, GraduationCap, Users, Briefcase, HeartPulse, CheckSquare
+  Home, GraduationCap, Users, Briefcase, HeartPulse, CheckSquare,
+  Eye, EyeOff
 } from 'lucide-react';
 
 const initialSupports = [
@@ -134,6 +135,7 @@ const AdminExpedientes = ({ onVolver }) => {
   const [adminUser, setAdminUser] = useState(() => sessionStorage.getItem('movilnet_admin_user') || '');
   const [loginInputUser, setLoginInputUser] = useState('');
   const [loginInputPass, setLoginInputPass] = useState('');
+  const [showAdminPass, setShowAdminPass] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
@@ -302,10 +304,11 @@ const AdminExpedientes = ({ onVolver }) => {
             <div className="mb-4">
               <label className="block text-xs font-bold text-gray-700 mb-1">Usuario Autorizado</label>
               <div className="relative">
-                <User size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                <User size={18} className="absolute left-3 top-2.5 text-gray-400 pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Usuario de Archivo"
+                  autoComplete="username"
                   className="w-full pl-10 p-2.5 border rounded text-xs font-medium uppercase outline-none focus:ring-2 focus:ring-blue-600"
                   value={loginInputUser}
                   onChange={e => setLoginInputUser(e.target.value)}
@@ -316,15 +319,24 @@ const AdminExpedientes = ({ onVolver }) => {
             <div className="mb-6">
               <label className="block text-xs font-bold text-gray-700 mb-1">Clave de Seguridad</label>
               <div className="relative">
-                <Lock size={18} className="absolute left-3 top-2.5 text-gray-400" />
+                <Lock size={18} className="absolute left-3 top-2.5 text-gray-400 pointer-events-none" />
                 <input
-                  type="password"
+                  type={showAdminPass ? "text" : "password"}
                   placeholder="Contraseña administrativa"
-                  className="w-full pl-10 p-2.5 border rounded text-xs font-medium outline-none focus:ring-2 focus:ring-blue-600"
+                  autoComplete="current-password"
+                  className="w-full pl-10 pr-10 p-2.5 border rounded text-xs font-medium outline-none focus:ring-2 focus:ring-blue-600"
                   value={loginInputPass}
                   onChange={e => setLoginInputPass(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminPass(!showAdminPass)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  title={showAdminPass ? "Ocultar clave" : "Mostrar clave"}
+                >
+                  {showAdminPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
             <button
@@ -362,17 +374,16 @@ const AdminExpedientes = ({ onVolver }) => {
   const hcm = datosDeclarados?.hcmPolizas || {};
   const declSalud = hcm?.declaracionSalud || {};
 
-  // Función para obtener los soportes de la pestaña activa
+  // Soportes de la pestaña activa
   const soportesDePestana = checklist.filter(item => item.tab === activeReviewTab);
 
   return (
     <div className="min-h-screen bg-gray-100 p-3 sm:p-5 font-sans text-left notranslate" translate="no">
       <div className="max-w-7xl mx-auto">
-        {/* Cabecera Administrativa */}
         <div className="bg-blue-950 text-white p-4 rounded-t-xl shadow flex flex-col sm:flex-row justify-between items-center gap-3">
           <div>
             <h1 className="text-lg sm:text-xl font-bold flex items-center gap-2">
-              <ShieldCheck className="text-blue-300" /> Control y Archivo de Personal: Revisión de Expedientes
+              <ShieldCheck className="text-blue-300" /> Archivo de Personal: Revisión de Expedientes
             </h1>
             <p className="text-xs text-blue-200 mt-0.5">Validación de datos declarados por el trabajador vs. soportes en físico</p>
           </div>
@@ -391,7 +402,7 @@ const AdminExpedientes = ({ onVolver }) => {
           </div>
         </div>
 
-        {/* Barra de Búsqueda y Progreso General */}
+        {/* Buscador de expedientes */}
         <div className="bg-white p-4 border-x border-b shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
           <form onSubmit={handleConsultarExpediente} className="flex gap-2 w-full md:w-auto">
             <input
@@ -491,7 +502,7 @@ const AdminExpedientes = ({ onVolver }) => {
             <div className="bg-white rounded-b-xl border border-t-0 p-4 sm:p-6 shadow-sm">
               {activeReviewTab < 6 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* COLUMNA IZQUIERDA: DATOS DECLARADOS POR EL TRABAJADOR */}
+                  {/* COLUMNA IZQUIERDA: DATOS DECLARADOS */}
                   <div className="lg:col-span-7 space-y-4">
                     <div className="flex items-center justify-between border-b pb-2">
                       <h3 className="text-sm font-bold text-blue-950 flex items-center gap-2 uppercase">
@@ -781,7 +792,7 @@ const AdminExpedientes = ({ onVolver }) => {
                       ))}
                     </div>
 
-                    {/* Botones de navegación entre pestañas */}
+                    {/* Navegación entre pestañas */}
                     <div className="flex justify-between items-center pt-4 border-t">
                       <button
                         type="button"
