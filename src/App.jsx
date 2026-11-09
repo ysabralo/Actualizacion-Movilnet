@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText } from 'lucide-react';
+import AdminExpedientes from './components/AdminExpedientes';
 
 // ================= DICCIONARIO GEOGRÁFICO DE VENEZUELA =================
 const VENEZUELA_GEO = {
@@ -469,6 +470,7 @@ const MOVILNET_ESTRUCTURA = {
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [viewMode, setViewMode] = useState('empleado'); // 'empleado' | 'admin'
   const [loginStep, setLoginStep] = useState('login'); // 'login' | 'verifyFirst' | 'createPassword'
   
   // Campos de Login Habitual (Cédula + Clave)
@@ -988,6 +990,11 @@ const App = () => {
   const municipiosList = dir.estado ? Object.keys(VENEZUELA_GEO[dir.estado] || {}).sort() : [];
   const parroquiasList = (dir.estado && dir.municipio) ? (VENEZUELA_GEO[dir.estado]?.[dir.municipio] || []).sort() : [];
 
+  // ================= REDIRECCIÓN SEGURA: ARCHIVO DE PERSONAL (RRHH) =================
+  if (viewMode === 'admin') {
+    return <AdminExpedientes onVolver={() => setViewMode('empleado')} />;
+  }
+
   // ================= PANTALLAS DE ACCESO (RESPONSIVE) =================
   if (!isAuthenticated) {
     return (
@@ -1030,6 +1037,16 @@ const App = () => {
                     ¿Es tu primer ingreso? Regístrate aquí
                   </button>
                 </div>
+
+                <div className="text-center mt-6 pt-4 border-t border-gray-100">
+                  <button 
+                    type="button" 
+                    onClick={() => setViewMode('admin')} 
+                    className="text-xs text-gray-400 hover:text-blue-800 flex items-center justify-center gap-1.5 mx-auto transition-colors font-medium"
+                  >
+                    <Lock size={12} /> Acceso Exclusivo Archivo de Personal (RRHH)
+                  </button>
+                </div>
               </form>
             )}
 
@@ -1042,7 +1059,7 @@ const App = () => {
                   <label className="block text-xs sm:text-sm font-bold text-gray-700 mb-2">Número de Personal (P00)</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserCheck className="h-5 w-5 text-gray-400" /></div>
-                    <input type="text" placeholder="Ej. 2XXXXX" autoComplete="off" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
+                    <input type="text" placeholder="Ej. 299999" autoComplete="off" className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 outline-none uppercase font-medium text-sm" value={p00Input} onChange={(e) => setP00Input(e.target.value.toUpperCase())} required />
                   </div>
                 </div>
 
@@ -1115,7 +1132,7 @@ const App = () => {
             <h2 className="text-xs sm:text-sm text-blue-200 mt-0.5 text-center sm:text-left">Fondo Administrado de Salud - Actualización de Datos</h2>
           </div>
           <div className="bg-blue-800 p-2.5 sm:p-3 rounded-lg border border-blue-700 w-full sm:w-auto min-w-[240px] relative">
-             <button onClick={() => {setIsAuthenticated(false); setLoginStep('login'); setSubmitStatus(null); setLoginCedula(''); setLoginClave('');}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
+             <button onClick={() => {setIsAuthenticated(false); setLoginStep('login'); setSubmitStatus(null); setLoginCedula(''); setLoginClave(''); setViewMode('empleado');}} className="absolute top-2 right-2 text-blue-300 hover:text-white text-xs underline">Salir</button>
             <p className="text-xs sm:text-sm font-semibold uppercase pr-10">{dp.nombres} {dp.apellidos}</p>
             <p className="text-xs text-blue-300">C.I: {dp.cedula}</p>
           </div>
@@ -2209,8 +2226,8 @@ const App = () => {
                       <select 
                         autoComplete="off" 
                         translate="no" 
-                        className="p-1 border rounded bg-white font-bold text-xs w-24"
-                        value={declSalud[item.id] || 'NO'}
+                        className="p-1 border rounded bg-white font-bold text-xs w-24" 
+                        value={declSalud[item.id] || 'NO'} 
                         onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', item.id, e.target.value)}
                       >
                         <option value="NO">NO</option>
@@ -2223,10 +2240,10 @@ const App = () => {
                     <label className="block text-xs font-bold text-gray-700 mb-1">Si marcó SÍ en alguna de las opciones anteriores, detalle a continuación la persona, enfermedad y observaciones:</label>
                     <textarea 
                       className="w-full p-2 border rounded text-xs bg-white uppercase" 
-                      rows="3"
-                      autoComplete="off"
-                      placeholder="DESCRIBA LOS DETALLES MÉDICOS..."
-                      value={declSalud.detallesEnfermedades || ''}
+                      rows="3" 
+                      autoComplete="off" 
+                      placeholder="DESCRIBA LOS DETALLES MÉDICOS..." 
+                      value={declSalud.detallesEnfermedades || ''} 
                       onChange={e => handleNestedInputChange('hcmPolizas', 'declaracionSalud', 'detallesEnfermedades', e.target.value)}
                     ></textarea>
                   </div>
@@ -2246,22 +2263,22 @@ const App = () => {
                     <input 
                       type="text" 
                       placeholder="Ej. CARACAS" 
-                      autoComplete="off"
-                      className="w-full p-2 border rounded text-xs bg-white uppercase"
-                      value={hcm.lugarDeclaracion || ''}
-                      onChange={e => handleInputChange('hcmPolizas', 'lugarDeclaracion', e.target.value)}
-                      required
+                      autoComplete="off" 
+                      className="w-full p-2 border rounded text-xs bg-white uppercase" 
+                      value={hcm.lugarDeclaracion || ''} 
+                      onChange={e => handleInputChange('hcmPolizas', 'lugarDeclaracion', e.target.value)} 
+                      required 
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Fecha <Req/></label>
                     <input 
                       type="date" 
-                      autoComplete="off"
-                      className="w-full p-2 border rounded text-xs bg-white"
-                      value={hcm.fechaDeclaracion || ''}
-                      onChange={e => handleInputChange('hcmPolizas', 'fechaDeclaracion', e.target.value)}
-                      required
+                      autoComplete="off" 
+                      className="w-full p-2 border rounded text-xs bg-white" 
+                      value={hcm.fechaDeclaracion || ''} 
+                      onChange={e => handleInputChange('hcmPolizas', 'fechaDeclaracion', e.target.value)} 
+                      required 
                     />
                   </div>
                 </div>
