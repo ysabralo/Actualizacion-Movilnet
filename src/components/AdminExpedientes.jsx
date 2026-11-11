@@ -4,7 +4,7 @@ import {
   ArrowLeft, ShieldCheck, User, Lock, LogOut, ShieldAlert, 
   ChevronRight, ChevronLeft, Check, AlertCircle, Info, 
   Home, GraduationCap, Users, Briefcase, HeartPulse, CheckSquare,
-  Eye, EyeOff
+  Eye, EyeOff, Mail, Send, X
 } from 'lucide-react';
 
 const initialSupports = [
@@ -154,6 +154,14 @@ const AdminExpedientes = ({ onVolver }) => {
   const [obsGenerales, setObsGenerales] = useState('');
   const [ipRegistrada, setIpRegistrada] = useState('');
 
+  // Estados para el Modal de Envío de Correo
+  const [modalCorreoAbierto, setModalCorreoAbierto] = useState(false);
+  const [correoDestino, setCorreoDestino] = useState('');
+  const [mensajeAdicionalCorreo, setMensajeAdicionalCorreo] = useState('');
+  const [enviandoCorreo, setEnviandoCorreo] = useState(false);
+  const [correoExitoMsg, setCorreoExitoMsg] = useState('');
+  const [correoErrorMsg, setCorreoErrorMsg] = useState('');
+
   const tabsNombres = [
     "1. Datos Personales",
     "2. Dirección",
@@ -215,6 +223,7 @@ const AdminExpedientes = ({ onVolver }) => {
         setTrabajadorSeleccionado(data.trabajador);
         setDatosDeclarados(data.datos_declarados || {});
         setAlertasSoportes(data.alertas_soportes || []);
+        setCorreoDestino(data.trabajador?.correo || data.datos_declarados?.datosPersonales?.correo || '');
 
         const soportesConfigurados = configurarSoportesInteligentes(
           data.datos_declarados, 
@@ -282,6 +291,54 @@ const AdminExpedientes = ({ onVolver }) => {
       }
     } finally {
       setGuardando(false);
+    }
+  };
+
+  const handleEnviarCorreo = async (e) => {
+    e.preventDefault();
+    if (!correoDestino || !correoDestino.includes('@')) {
+      setCorreoErrorMsg('Indique una dirección de correo válida.');
+      return;
+    }
+    setEnviandoCorreo(true);
+    setCorreoErrorMsg('');
+    setCorreoExitoMsg('');
+
+    const recaudosAEnviar = checklist.filter(c => c.estado === 'PENDIENTE' || c.estado === 'ILEGIBLE');
+
+    try {
+      const response = await fetch('/api/admin/expediente/notificar-recaudos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({
+          cedula_trabajador: trabajadorSeleccionado.cedula,
+          correo_destino: correoDestino,
+          analista_revisor: adminUser,
+          soportes_pendientes: recaudosAEnviar,
+          mensaje_adicional: mensajeAdicionalCorreo
+        })
+      });
+
+      if (response.ok) {
+        const res = await response.json();
+        setCorreoExitoMsg(res.mensaje);
+        setTimeout(() => {
+          setModalCorreoAbierto(false);
+          setCorreoExitoMsg('');
+        }, 2500);
+      } else if (response.status === 401) {
+        handleLogout();
+      } else {
+        const err = await response.json();
+        setCorreoErrorMsg(err.detail || 'Error al enviar el correo.');
+      }
+    } catch (err) {
+      setCorreoErrorMsg('Error de conexión con el servidor al enviar la notificación.');
+    } finally {
+      setEnviandoCorreo(false);
     }
   };
 
@@ -364,6 +421,7 @@ const AdminExpedientes = ({ onVolver }) => {
   const ilegibles = checklist.filter(c => c.estado === 'ILEGIBLE').length;
   const noAplica = checklist.filter(c => c.estado === 'NO_APLICA').length;
   const porcentaje = requeridos > 0 ? Math.round((conformes / requeridos) * 100) : 0;
+  const totalNoConformes = pendientes + ilegibles;
 
   // Acceso seguro a las secciones del trabajador
   const dp = datosDeclarados?.datosPersonales || {};
@@ -523,7 +581,9 @@ const AdminExpedientes = ({ onVolver }) => {
                           <div><span className="text-gray-500 block">Fecha Nacimiento / Edad:</span><span className="font-medium">{dp.fechaNacimiento} ({dp.edad} años)</span></div>
                           <div><span className="text-gray-500 block">Sexo / Estado Civil:</span><span className="font-medium">{dp.sexo === 'F' ? 'FEMENINO' : 'MASCULINO'} | {dp.estadoCivil}</span></div>
                           <div><span className="text-gray-500 block">Lugar Nacimiento:</span><span className="font-medium">{dp.lugarNacimiento || 'NO INDICADO'}</span></div>
-                          {dp.gaceta && <div className="col-span-2"><span className="text-gray-500 block">Gaceta Naturalización:</span><span className="font-bold text-blue-900">{dp.gaceta}</span></div>}
+                          <div><span className="text-gray-500 block">Correo Personal:</span><span className="font-medium text-blue-900">{dp.correo || 'NO REGISTRADO'}</span></div>
+                          <div><span className="text-gray-500 block">Teléfonos:</span><span className="font-medium">{dp.tlfMovil || '-'} / {dp.tlfLocal || '-'}</span></div>
+                          {dp.gaceta && <div><span className="text-gray-500 block">Gaceta Naturalización:</span><span className="font-bold text-blue-900">{dp.gaceta}</span></div>}
                         </div>
 
                         <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100">
@@ -835,10 +895,27 @@ const AdminExpedientes = ({ onVolver }) => {
                   </div>
 
                   <div>
-                    <h4 className="text-xs font-bold text-gray-800 mb-2 uppercase flex items-center gap-1.5">
-                      <AlertCircle size={15} className="text-amber-600" /> Soportes Pendientes o con Observaciones por Solicitar:
-                    </h4>
-                    {checklist.filter(c => c.estado === 'PENDIENTE' || c.estado === 'ILEGIBLE').length > 0 ? (
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-2">
+                      <h4 className="text-xs font-bold text-gray-800 uppercase flex items-center gap-1.5">
+                        <AlertCircle size={15} className="text-amber-600" /> Soportes Pendientes o con Observaciones por Solicitar:
+                      </h4>
+
+                      {totalNoConformes > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setModalCorreoAbierto(true);
+                            setCorreoErrorMsg('');
+                            setCorreoExitoMsg('');
+                          }}
+                          className="bg-blue-900 hover:bg-blue-800 text-white px-3.5 py-1.5 rounded font-bold text-xs flex items-center gap-1.5 shadow transition-colors"
+                        >
+                          <Mail size={14} /> Notificar al Trabajador por Correo ({totalNoConformes})
+                        </button>
+                      )}
+                    </div>
+
+                    {totalNoConformes > 0 ? (
                       <div className="border rounded-lg divide-y bg-white">
                         {checklist.filter(c => c.estado === 'PENDIENTE' || c.estado === 'ILEGIBLE').map(item => (
                           <div key={item.id} className="p-2.5 flex items-center justify-between">
@@ -911,6 +988,100 @@ const AdminExpedientes = ({ onVolver }) => {
             <FileText size={48} className="mx-auto text-gray-300 mb-2" />
             <p className="text-sm font-semibold text-gray-600">Módulo de Verificación Documental (Archivo de Personal)</p>
             <p className="text-xs text-gray-400 mt-1">Ingrese la cédula de identidad del trabajador arriba para contrastar los datos declarados contra su carpeta física.</p>
+          </div>
+        )}
+
+        {/* MODAL DE ENVÍO DE NOTIFICACIÓN POR CORREO */}
+        {modalCorreoAbierto && (
+          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl max-w-lg w-full overflow-hidden shadow-2xl border text-left">
+              <div className="bg-blue-950 text-white p-4 flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <Mail size={18} className="text-blue-300" />
+                  <h3 className="font-bold text-sm">Notificar Recaudos al Trabajador</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setModalCorreoAbierto(false)}
+                  className="text-gray-300 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleEnviarCorreo} className="p-5 space-y-4 text-xs">
+                {correoErrorMsg && (
+                  <div className="p-3 bg-red-50 border-l-4 border-red-500 text-red-700 rounded font-medium">
+                    {correoErrorMsg}
+                  </div>
+                )}
+                {correoExitoMsg && (
+                  <div className="p-3 bg-green-50 border-l-4 border-green-500 text-green-800 rounded font-medium flex items-center gap-2">
+                    <CheckCircle2 size={16} /> {correoExitoMsg}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">Destinatario (Correo Personal Declarado):</label>
+                  <input
+                    type="email"
+                    value={correoDestino}
+                    onChange={e => setCorreoDestino(e.target.value)}
+                    required
+                    className="w-full p-2 border rounded text-xs lowercase outline-none focus:ring-2 focus:ring-blue-600"
+                  />
+                  <span className="text-[11px] text-gray-500 mt-0.5 block">
+                    Tomado de la Pestaña 1 (Datos Personales) del trabajador.
+                  </span>
+                </div>
+
+                <div>
+                  <span className="block text-gray-700 font-bold mb-1">
+                    Recaudos a Notificar ({checklist.filter(c => c.estado === 'PENDIENTE' || c.estado === 'ILEGIBLE').length}):
+                  </span>
+                  <div className="max-h-36 overflow-y-auto border rounded p-2 bg-gray-50 space-y-1">
+                    {checklist.filter(c => c.estado === 'PENDIENTE' || c.estado === 'ILEGIBLE').map(item => (
+                      <div key={item.id} className="text-[11px] flex justify-between items-center py-0.5 border-b last:border-b-0">
+                        <span className="font-medium text-gray-800">{item.documento}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded uppercase ${
+                          item.estado === 'PENDIENTE' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {item.estado}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1">Instrucciones o Mensaje Adicional (Opcional):</label>
+                  <textarea
+                    rows="3"
+                    value={mensajeAdicionalCorreo}
+                    onChange={e => setMensajeAdicionalCorreo(e.target.value)}
+                    placeholder="Ej. Por favor consignar antes del viernes en el piso 2, oficina de Atención al Trabajador..."
+                    className="w-full p-2 border rounded text-xs outline-none focus:ring-2 focus:ring-blue-600"
+                  ></textarea>
+                </div>
+
+                <div className="pt-3 border-t flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalCorreoAbierto(false)}
+                    className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded font-semibold text-xs transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={enviandoCorreo}
+                    className="px-5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded font-bold text-xs flex items-center gap-1.5 shadow transition-colors disabled:opacity-50"
+                  >
+                    <Send size={14} /> {enviandoCorreo ? 'Enviando Correo...' : 'Confirmar y Enviar Notificación'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
       </div>
