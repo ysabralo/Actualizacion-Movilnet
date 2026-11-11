@@ -3,10 +3,11 @@ import time
 import hmac
 import hashlib
 import smtplib
+import random
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List, Optional, Dict, Any
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from fastapi import FastAPI, HTTPException, Request, Header, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -86,6 +87,17 @@ class AuditoriaExpedienteLog(Base):
     ip_revisor = Column(String, nullable=True)
     fecha_evento = Column(DateTime, default=datetime.utcnow)
     detalles = Column(JSON, nullable=True)
+
+
+class VerificacionCorreo(Base):
+    __tablename__ = "verificaciones_correo"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    cedula = Column(String, index=True, nullable=False)
+    correo = Column(String, nullable=False)
+    codigo = Column(String, nullable=False)
+    expira_en = Column(DateTime, nullable=False)
+    verificado = Column(String, default="NO")  # 'SÍ' o 'NO'
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
 
 Base.metadata.create_all(bind=engine)
@@ -188,6 +200,7 @@ def generar_plantilla_inicial(trabajador: TrabajadorSAP) -> dict:
             "colegiado": "NO",
             "nroColegiado": "",
             "correo": "",
+            "correoVerificado": "NO",
             "tlfMovil": "",
             "tlfLocal": "",
             "unidadAdscripcion": "",
@@ -321,7 +334,7 @@ def enviar_correo_smtp(destinatario: str, asunto: str, cuerpo_html: str):
     if not SMTP_USER or not SMTP_PASSWORD:
         raise HTTPException(
             status_code=500,
-            detail="Servidor de correo no configurado. Asegúrese de definir las variables SMTP_USER y SMTP_PASSWORD en el entorno."
+            detail="Servidor de correo no configurado. Defina las variables SMTP_USER y SMTP_PASSWORD en el entorno."
         )
 
     msg = MIMEMultipart("alternative")
@@ -347,6 +360,46 @@ def enviar_correo_smtp(destinatario: str, asunto: str, cuerpo_html: str):
             server.quit()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al enviar el correo por SMTP: {str(e)}")
+
+
+def construir_plantilla_correo_otp(nombre_trabajador: str, codigo_otp: str) -> str:
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head><meta charset="utf-8"></head>
+    <body style="font-family: Arial, Helvetica, sans-serif; background-color: #F3F4F6; margin: 0; padding: 20px; color: #1F2937;">
+        <div style="max-width: 500px; margin: 0 auto; background-color: #FFFFFF; border-radius: 8px; overflow: hidden; border: 1px solid #E5E7EB; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+            <div style="background-color: #002B66; padding: 20px; text-align: center; color: #FFFFFF;">
+                <h1 style="margin: 0; font-size: 18px; letter-spacing: 0.5px;">TELECOMUNICACIONES MOVILNET C.A.</h1>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #93C5FD;">Gerencia General de Talento Humano | Actualización de Datos</p>
+            </div>
+            
+            <div style="padding: 24px; text-align: center;">
+                <h2 style="font-size: 16px; color: #002B66; margin-top: 0;">Código de Certificación de Correo</h2>
+                <p style="font-size: 13px; line-height: 1.5; color: #4B5563; margin-bottom: 20px;">
+                    Estimado(a) <strong>{nombre_trabajador}</strong>,<br>
+                    Para validar que este es su correo personal auténtico y asegurar la recepción de sus notificaciones laborales, introduzca el siguiente código en el portal:
+                </p>
+
+                <div style="display: inline-block; background-color: #EFF6FF; border: 2px dashed #2563EB; border-radius: 8px; padding: 14px 28px; margin-bottom: 20px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #1E3A8A;">
+                        {codigo_otp}
+                    </span>
+                </div>
+
+                <p style="font-size: 12px; color: #6B7280; line-height: 1.4; margin-bottom: 0;">
+                    Este código es confidencial y tiene una vigencia de <strong>10 minutos</strong>.<br>
+                    Si usted no está realizando este trámite, por favor desestime este mensaje.
+                </p>
+            </div>
+
+            <div style="background-color: #F9FAFB; padding: 12px 20px; text-align: center; font-size: 11px; color: #9CA3AF; border-top: 1px solid #E5E7EB;">
+                Mensaje automático de seguridad generado por el Sistema de Actualización de Datos de Movilnet.
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 
 def construir_plantilla_correo_recaudos(
@@ -489,6 +542,17 @@ class NotificarTrabajadorRequest(BaseModel):
     mensaje_adicional: Optional[str] = ""
 
 
+class EnviarOtpRequest(BaseModel):
+    cedula: str
+    correo: str
+
+
+class ValidarOtpRequest(BaseModel):
+    cedula: str
+    correo: str
+    codigo: str
+
+
 # ==============================================================================
 # ENDPOINTS PÚBLICOS / TRABAJADOR
 # ==============================================================================
@@ -586,6 +650,17 @@ def login_clave(req: LoginClaveRequest):
             plantilla = generar_plantilla_inicial(trabajador) if trabajador else {}
             datos_previos["hcmPolizas"] = plantilla.get("hcmPolizas", {})
 
+        # Sincronizar estado de certificación del correo
+        verif = db.query(VerificacionCorreo).filter(
+            VerificacionCorreo.cedula == cedula,
+            VerificacionCorreo.verificado == "SÍ"
+        ).first()
+
+        if "datosPersonales" in datos_previos:
+            correo_actual = (datos_previos["datosPersonales"].get("correo") or "").strip().lower()
+            if verif and verif.correo.strip().lower() == correo_actual:
+                datos_previos["datosPersonales"]["correoVerificado"] = "SÍ"
+
         return {
             "p00": p00,
             "nombres": oferta.nombres,
@@ -613,6 +688,15 @@ def save_oferta(data: dict):
         if not dp.get("rif"):
             data["datosPersonales"]["rif"] = calcular_digito_rif(nac, cedula)
 
+        # Confirmar en base de datos si el correo registrado fue certificado
+        correo_actual = (dp.get("correo") or "").strip().lower()
+        verif = db.query(VerificacionCorreo).filter(
+            VerificacionCorreo.cedula == cedula,
+            VerificacionCorreo.verificado == "SÍ"
+        ).first()
+        if verif and verif.correo.strip().lower() == correo_actual:
+            data["datosPersonales"]["correoVerificado"] = "SÍ"
+
         oferta = db.query(OfertaServicio).filter(OfertaServicio.cedula == cedula).first()
         if oferta:
             oferta.nombres = nombres or oferta.nombres
@@ -630,6 +714,121 @@ def save_oferta(data: dict):
 
         db.commit()
         return {"status": "success"}
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+# ==============================================================================
+# ENDPOINTS DE CERTIFICACIÓN DE CORREO PERSONAL (OTP)
+# ==============================================================================
+@app.post("/api/correo/enviar-otp")
+def enviar_otp_correo(req: EnviarOtpRequest):
+    """Genera y envía un código de 6 dígitos con vigencia de 10 minutos."""
+    db = SessionLocal()
+    try:
+        correo_limpio = req.correo.strip().lower()
+        cedula_limpia = req.cedula.strip().upper()
+
+        if not correo_limpio or "@" not in correo_limpio or "." not in correo_limpio.split("@")[-1]:
+            raise HTTPException(status_code=400, detail="Dirección de correo electrónico inválida.")
+
+        trabajador = db.query(TrabajadorSAP).filter(TrabajadorSAP.cedula == cedula_limpia).first()
+        nombre_trabajador = f"{trabajador.nombres} {trabajador.apellidos}".upper() if trabajador else "TRABAJADOR"
+
+        codigo_otp = f"{random.randint(100000, 999999)}"
+        expira = datetime.utcnow() + timedelta(minutes=10)
+
+        registro = db.query(VerificacionCorreo).filter(VerificacionCorreo.cedula == cedula_limpia).first()
+        if registro:
+            registro.correo = correo_limpio
+            registro.codigo = codigo_otp
+            registro.expira_en = expira
+            registro.verificado = "NO"
+            registro.fecha_creacion = datetime.utcnow()
+        else:
+            nuevo_registro = VerificacionCorreo(
+                cedula=cedula_limpia,
+                correo=correo_limpio,
+                codigo=codigo_otp,
+                expira_en=expira,
+                verificado="NO",
+            )
+            db.add(nuevo_registro)
+
+        db.commit()
+
+        asunto = f"Código de Confirmación: {codigo_otp} - Movilnet RRHH"
+        cuerpo_html = construir_plantilla_correo_otp(nombre_trabajador, codigo_otp)
+
+        enviar_correo_smtp(correo_limpio, asunto, cuerpo_html)
+
+        return {
+            "status": "success",
+            "mensaje": f"Código de 6 dígitos enviado exitosamente a {correo_limpio}."
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        db.close()
+
+
+@app.post("/api/correo/validar-otp")
+def validar_otp_correo(req: ValidarOtpRequest):
+    """Valida el código de 6 dígitos y certifica el correo del trabajador."""
+    db = SessionLocal()
+    try:
+        correo_limpio = req.correo.strip().lower()
+        cedula_limpia = req.cedula.strip().upper()
+        codigo_ingresado = req.codigo.strip()
+
+        registro = db.query(VerificacionCorreo).filter(
+            VerificacionCorreo.cedula == cedula_limpia,
+            VerificacionCorreo.correo == correo_limpio
+        ).first()
+
+        if not registro:
+            raise HTTPException(
+                status_code=400,
+                detail="No se encontró una solicitud activa para este correo. Solicite un nuevo código."
+            )
+
+        if datetime.utcnow() > registro.expira_en:
+            raise HTTPException(
+                status_code=400,
+                detail="El código de verificación ha expirado (validez de 10 minutos). Solicite uno nuevo."
+            )
+
+        if registro.codigo != codigo_ingresado:
+            raise HTTPException(
+                status_code=400,
+                detail="El código introducido es incorrecto. Verifíquelo e intente nuevamente."
+            )
+
+        registro.verificado = "SÍ"
+
+        # Sincronizar en la oferta de servicio
+        oferta = db.query(OfertaServicio).filter(OfertaServicio.cedula == cedula_limpia).first()
+        if oferta and oferta.datos_completos:
+            datos = dict(oferta.datos_completos)
+            if "datosPersonales" in datos:
+                datos["datosPersonales"]["correo"] = correo_limpio
+                datos["datosPersonales"]["correoVerificado"] = "SÍ"
+                oferta.datos_completos = datos
+
+        db.commit()
+
+        return {
+            "status": "success",
+            "mensaje": "Correo electrónico verificado y certificado exitosamente."
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -821,7 +1020,6 @@ def notificar_recaudos_trabajador(
     request: Request,
     admin_user: str = Depends(verify_admin_token)
 ):
-    """Envía un correo con los recaudos pendientes o ilegibles al correo personal del trabajador."""
     db = SessionLocal()
     try:
         cedula_clean = req.cedula_trabajador.strip().upper()
@@ -836,7 +1034,6 @@ def notificar_recaudos_trabajador(
 
         nombre_completo = f"{oferta.nombres} {oferta.apellidos}".upper()
 
-        # Filtrar recaudos no conformes
         pendientes = [
             item for item in req.soportes_pendientes
             if item.get("estado") in ["PENDIENTE", "ILEGIBLE"]
@@ -865,7 +1062,6 @@ def notificar_recaudos_trabajador(
             cuerpo_html=cuerpo_html
         )
 
-        # Registro de trazabilidad
         ip_revisor = get_client_ip(request)
         log_notif = AuditoriaExpedienteLog(
             cedula=cedula_clean,

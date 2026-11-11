@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText, Eye, EyeOff } from 'lucide-react';
+import { Save, CheckCircle, AlertCircle, Plus, Trash2, Search, UserCheck, ChevronRight, ChevronLeft, Lock, Calendar, CreditCard, Key, ShieldPlus, FileText, Eye, EyeOff, Mail, Send } from 'lucide-react';
 import AdminExpedientes from './components/AdminExpedientes';
 
 // ================= DICCIONARIO GEOGRÁFICO DE VENEZUELA =================
@@ -467,6 +467,33 @@ const MOVILNET_ESTRUCTURA = {
   ]
 };
 
+// ================= DICCIONARIO DE CORRECCIÓN DE DOMINIOS COMUNES =================
+const DOMINIOS_COMUNES = {
+  'gmai.com': 'gmail.com',
+  'gamil.com': 'gmail.com',
+  'gmaill.com': 'gmail.com',
+  'gmial.com': 'gmail.com',
+  'gmaik.com': 'gmail.com',
+  'hotmial.com': 'hotmail.com',
+  'hotmai.com': 'hotmail.com',
+  'hotmali.com': 'hotmail.com',
+  'outlok.com': 'outlook.com',
+  'outloo.com': 'outlook.com',
+  'yaho.com': 'yahoo.com',
+  'yahu.com': 'yahoo.com',
+  'yahooo.com': 'yahoo.com',
+  'cantv.com': 'cantv.net',
+  'movilnet.com': 'movilnet.com.ve'
+};
+
+const sugerenciaDominio = (correo) => {
+  if (!correo || !correo.includes('@')) return null;
+  const partes = correo.trim().toLowerCase().split('@');
+  if (partes.length !== 2) return null;
+  const dominio = partes[1];
+  return DOMINIOS_COMUNES[dominio] || null;
+};
+
 const App = () => {
   // ================= ESTADOS Y AUTENTICACIÓN =================
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -489,6 +516,14 @@ const App = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Estados para Certificación de Correo (OTP)
+  const [correoVerificado, setCorreoVerificado] = useState(false);
+  const [codigoOtpInput, setCodigoOtpInput] = useState('');
+  const [esperandoOtp, setEsperandoOtp] = useState(false);
+  const [enviandoOtp, setEnviandoOtp] = useState(false);
+  const [verificandoOtp, setVerificandoOtp] = useState(false);
+  const [mensajeOtp, setMensajeOtp] = useState(null); // { tipo: 'exito' | 'error', texto: '' }
+
   const [isSearching, setIsSearching] = useState(false);
   const [loginError, setLoginError] = useState(null);
 
@@ -505,7 +540,7 @@ const App = () => {
       nombres: '', apellidos: '', cedula: '', rif: '', lugarNacimiento: '', fechaNacimiento: '', 
       nacionalidad: '', gaceta: '', edad: '', sexo: '', grupoSanguineo: '', estadoCivil: '', habilidadMotriz: '',
       licencia: '', gradoLicencia: '', tipoVivienda: '', condicionVivienda: '', alergico: '', alergiaDesc: '',
-      profesion: '', ocupacion: '', colegiado: '', nroColegiado: '', correo: '', tlfMovil: '', tlfLocal: '',
+      profesion: '', ocupacion: '', colegiado: '', nroColegiado: '', correo: '', correoVerificado: false, tlfMovil: '', tlfLocal: '',
       unidadAdscripcion: '', gerenciaGeneral: '', region: '', estadoTrabajo: '',
       emergenciaNombre1: '', emergenciaTelefono1: '', emergenciaNombre2: '', emergenciaTelefono2: '',
       carnetPatria: '', nroCarnetPatria: '', estatura: '', peso: '', tallaCamisa: '',
@@ -591,6 +626,8 @@ const App = () => {
     for (const key in data) {
       if (key === 'correo' && typeof data[key] === 'string') {
         newData[key] = data[key].toLowerCase();
+      } else if (key === 'correoVerificado') {
+        newData[key] = Boolean(data[key]);
       } else if (typeof data[key] === 'string') {
         newData[key] = data[key].toUpperCase();
       } else {
@@ -620,6 +657,13 @@ const App = () => {
       const newData = { ...prev, [section]: { ...targetSection, [field]: finalValue } };
       
       if (section === 'datosPersonales') {
+        if (field === 'correo') {
+          newData.datosPersonales.correoVerificado = false;
+          setCorreoVerificado(false);
+          setEsperandoOtp(false);
+          setCodigoOtpInput('');
+          setMensajeOtp(null);
+        }
         if (field === 'fechaNacimiento') {
           newData.datosPersonales.edad = calcularEdad(finalValue);
         }
@@ -703,6 +747,90 @@ const App = () => {
     return { ...prev, [section]: { ...targetSection, [arrayName]: newArray } };
   });
 
+  // ================= VALIDACIÓN Y CERTIFICACIÓN OTP DE CORREO =================
+  const solicitarCodigoOtp = async () => {
+    setMensajeOtp(null);
+    const email = (formData.datosPersonales?.correo || '').trim().toLowerCase();
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      setMensajeOtp({ tipo: 'error', texto: 'Por favor ingrese una dirección de correo válida antes de verificar.' });
+      return;
+    }
+    const cedula = (formData.datosPersonales?.cedula || loginCedula || cedulaInput || '').trim().toUpperCase();
+    if (!cedula) {
+      setMensajeOtp({ tipo: 'error', texto: 'No se detectó la cédula del trabajador para validar el correo.' });
+      return;
+    }
+
+    setEnviandoOtp(true);
+    try {
+      const response = await fetch('/api/correo/enviar-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cedula: cedula,
+          correo: email
+        })
+      });
+      const resData = await response.json();
+      if (response.ok) {
+        setEsperandoOtp(true);
+        setMensajeOtp({ 
+          tipo: 'exito', 
+          texto: `Código de 6 dígitos enviado a ${email}. Revise su bandeja de entrada (o carpeta Spam).` 
+        });
+      } else {
+        setMensajeOtp({ tipo: 'error', texto: resData.detail || 'Error al enviar el código de verificación.' });
+      }
+    } catch (err) {
+      setMensajeOtp({ tipo: 'error', texto: 'Error de conexión con el servidor al enviar el código.' });
+    } finally {
+      setEnviandoOtp(false);
+    }
+  };
+
+  const confirmarCodigoOtp = async () => {
+    setMensajeOtp(null);
+    const email = (formData.datosPersonales?.correo || '').trim().toLowerCase();
+    const cedula = (formData.datosPersonales?.cedula || loginCedula || cedulaInput || '').trim().toUpperCase();
+    if (!codigoOtpInput || codigoOtpInput.trim().length !== 6) {
+      setMensajeOtp({ tipo: 'error', texto: 'Ingrese el código numérico completo de 6 dígitos.' });
+      return;
+    }
+
+    setVerificandoOtp(true);
+    try {
+      const response = await fetch('/api/correo/validar-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cedula: cedula,
+          correo: email,
+          codigo: codigoOtpInput.trim()
+        })
+      });
+      const resData = await response.json();
+      if (response.ok) {
+        setCorreoVerificado(true);
+        setEsperandoOtp(false);
+        setCodigoOtpInput('');
+        setMensajeOtp({ tipo: 'exito', texto: '¡Correo verificado y certificado correctamente!' });
+        setFormData(prev => ({
+          ...prev,
+          datosPersonales: {
+            ...prev.datosPersonales,
+            correoVerificado: true
+          }
+        }));
+      } else {
+        setMensajeOtp({ tipo: 'error', texto: resData.detail || 'Código de verificación incorrecto o expirado.' });
+      }
+    } catch (err) {
+      setMensajeOtp({ tipo: 'error', texto: 'Error de comunicación con el servidor al verificar el código.' });
+    } finally {
+      setVerificandoOtp(false);
+    }
+  };
+
   const validateTab = (tabIndex, data = formData) => {
     const errors = [];
     const dp = data.datosPersonales || {};
@@ -719,7 +847,11 @@ const App = () => {
       if (!dp.fechaNacimiento) errors.push("Fecha de Nacimiento");
       if (!dp.sexo) errors.push("Sexo");
       if (!dp.estadoCivil) errors.push("Estado Civil");
-      if (!dp.correo) errors.push("Correo Electrónico");
+      if (!dp.correo) {
+        errors.push("Correo Electrónico Personal");
+      } else if (!correoVerificado && !dp.correoVerificado) {
+        errors.push("Certificación de Correo (Debe validar su correo con el código de 6 dígitos)");
+      }
       if (!dp.tlfMovil || dp.tlfMovil.length < 12) errors.push("Teléfono Móvil (Formato 0XXX-XXXXXXX)");
       if (!dp.unidadAdscripcion) errors.push("Unidad de Adscripción");
       if (!dp.gerenciaGeneral) errors.push("Gerencia General");
@@ -920,6 +1052,13 @@ const App = () => {
         hcmPolizas: { ...prev.hcmPolizas, ...(formattedData.hcmPolizas || {}) }
       }));
 
+      // Si ya tenía el correo certificado en sesiones anteriores
+      if (rawData.datosPersonales?.correoVerificado) {
+        setCorreoVerificado(true);
+      } else {
+        setCorreoVerificado(false);
+      }
+
       let unlocked = 0;
       for (let i = 0; i <= 5; i++) {
         if (validateTab(i, formattedData).length === 0) unlocked = i + 1;
@@ -940,9 +1079,11 @@ const App = () => {
           apellidos: (data.apellidos || '').toUpperCase(), 
           cedula: ced,
           nacionalidad: nac,
-          rif: rifAuto
+          rif: rifAuto,
+          correoVerificado: false
         } 
       }));
+      setCorreoVerificado(false);
       setMaxUnlockedTab(0);
       setActiveTab(0);
     }
@@ -1488,8 +1629,135 @@ const App = () => {
                 </div>
               </div>
 
+              {/* BLOQUE DE CORREO PERSONAL CON CERTIFICACIÓN OTP */}
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 border-t pt-4">
-                <div className="sm:col-span-2"><label className="block text-xs font-medium text-gray-700 mb-1">Correo Electrónico Personal <Req/></label><input type="email" autoComplete="off" className="w-full p-2 border rounded lowercase text-xs sm:text-sm" value={dp.correo || ''} onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} /></div>
+                <div className="sm:col-span-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-xs font-medium text-gray-700">
+                      Correo Electrónico Personal <Req/>
+                    </label>
+                    {correoVerificado && (
+                      <span className="text-[11px] text-green-700 font-bold flex items-center gap-1 bg-green-50 px-2 py-0.5 rounded border border-green-200">
+                        <CheckCircle size={12} className="text-green-600" /> Correo Certificado
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <input 
+                      type="email" 
+                      autoComplete="off" 
+                      disabled={correoVerificado}
+                      placeholder="ejemplo@correo.com"
+                      className={`w-full p-2 border rounded lowercase text-xs sm:text-sm outline-none transition-colors ${
+                        correoVerificado 
+                          ? 'bg-green-50/70 border-green-400 font-medium text-green-900 cursor-not-allowed' 
+                          : 'bg-white focus:ring-2 focus:ring-blue-600'
+                      }`} 
+                      value={dp.correo || ''} 
+                      onChange={e => handleInputChange('datosPersonales', 'correo', e.target.value)} 
+                    />
+                    
+                    {!correoVerificado ? (
+                      <button
+                        type="button"
+                        onClick={solicitarCodigoOtp}
+                        disabled={enviandoOtp || !dp.correo || !dp.correo.includes('@')}
+                        className="px-3.5 py-2 bg-blue-900 hover:bg-blue-800 text-white rounded text-xs font-bold whitespace-nowrap shadow-sm disabled:opacity-50 transition-colors flex items-center gap-1.5"
+                      >
+                        {enviandoOtp ? (
+                          <>Enviando...</>
+                        ) : (
+                          <><Mail size={14} /> Verificar Correo</>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCorreoVerificado(false);
+                          setEsperandoOtp(false);
+                          setMensajeOtp(null);
+                          setFormData(prev => ({
+                            ...prev,
+                            datosPersonales: {
+                              ...prev.datosPersonales,
+                              correoVerificado: false
+                            }
+                          }));
+                        }}
+                        className="px-2.5 py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium underline whitespace-nowrap"
+                        title="Cambiar correo"
+                      >
+                        Modificar
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Sugerencia preventiva si hubo error tipográfico de dominio */}
+                  {sugerenciaDominio(dp.correo) && !correoVerificado && (
+                    <div className="mt-1.5 p-2 bg-amber-50 border border-amber-200 rounded text-[11px] text-amber-800 flex items-center justify-between">
+                      <span>⚠️ ¿Quiso escribir <strong>@{sugerenciaDominio(dp.correo)}</strong>?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const userPrefix = (dp.correo || '').split('@')[0];
+                          const corregido = `${userPrefix}@${sugerenciaDominio(dp.correo)}`;
+                          handleInputChange('datosPersonales', 'correo', corregido);
+                        }}
+                        className="underline font-bold text-amber-900 hover:text-amber-950 ml-2"
+                      >
+                        Corregir automáticamente
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Panel de ingreso del código de verificación OTP */}
+                  {esperandoOtp && !correoVerificado && (
+                    <div className="mt-2.5 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-[11px] text-blue-900 mb-2 font-medium">
+                        Ingrese el código de 6 dígitos enviado a su buzón:
+                      </p>
+                      <div className="flex flex-wrap gap-2 items-center">
+                        <input
+                          type="text"
+                          maxLength="6"
+                          placeholder="000000"
+                          className="p-1.5 border border-blue-300 rounded text-sm text-center font-bold tracking-widest w-28 bg-white outline-none focus:ring-2 focus:ring-blue-600 font-mono"
+                          value={codigoOtpInput}
+                          onChange={e => setCodigoOtpInput(e.target.value.replace(/\D/g, ''))}
+                        />
+                        <button
+                          type="button"
+                          onClick={confirmarCodigoOtp}
+                          disabled={verificandoOtp || codigoOtpInput.length !== 6}
+                          className="px-3.5 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-bold shadow-sm disabled:opacity-50 transition-colors"
+                        >
+                          {verificandoOtp ? 'Comprobando...' : 'Confirmar Código'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={solicitarCodigoOtp}
+                          disabled={enviandoOtp}
+                          className="text-[11px] text-blue-700 hover:underline ml-2"
+                        >
+                          Reenviar código
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mensajes de feedback del OTP */}
+                  {mensajeOtp && (
+                    <div className={`mt-2 p-2 rounded text-[11px] font-medium flex items-center gap-1.5 ${
+                      mensajeOtp.tipo === 'exito' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+                    }`}>
+                      {mensajeOtp.tipo === 'exito' ? <CheckCircle size={14} className="flex-shrink-0" /> : <AlertCircle size={14} className="flex-shrink-0" />}
+                      <span>{mensajeOtp.texto}</span>
+                    </div>
+                  )}
+                </div>
+
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Móvil <Req/></label><input type="text" placeholder="Ej. 0414-1234567" maxLength="12" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfMovil || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfMovil', e.target.value)} /></div>
                 <div><label className="block text-xs font-medium text-gray-700 mb-1">Teléfono Local</label><input type="text" placeholder="Ej. 0212-1234567" maxLength="12" autoComplete="off" className="w-full p-2 border rounded text-xs sm:text-sm" value={dp.tlfLocal || ''} onChange={e => handlePhoneChange('datosPersonales', 'tlfLocal', e.target.value)} /></div>
               </div>
